@@ -25,4 +25,39 @@ public class EventsController : ControllerBase
         await _context.SaveChangesAsync();
         return CreatedAtAction(nameof(GetEvents), new { id = @event.Id }, @event);
     }
+    // Dans Controllers/EventsController.cs
+
+    [Authorize(Policy = "Organiser")]
+    [HttpPut("{id}")]
+    public async Task<IActionResult> ModifyEvent(int id, Event @event)
+    {
+        if (id != @event.Id) return BadRequest();
+
+        _context.Entry(@event).State = EntityState.Modified;
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!_context.Events.Any(e => e.Id == id)) return NotFound();
+            else throw;
+        }
+
+        return NoContent();
+    }
+
+    [Authorize(Policy = "Organiser")]
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteEvent(int id)
+    {
+        var @event = await _context.Events.FindAsync(id);
+        if (@event == null) return NotFound();
+
+        _context.Events.Remove(@event);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
 }

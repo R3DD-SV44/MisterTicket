@@ -144,6 +144,16 @@ public class ReservationsController : ControllerBase
             }
 
             await _context.SaveChangesAsync();
+
+            var payment = new Payment
+            {
+                Reference = $"PAY-{Guid.NewGuid().ToString().Substring(0, 8)}",
+                Value = res.SelectedSeats.Sum(s => s.Price),
+                Status = PaymentStatus.Success,
+                ReservationId = res.Id
+            };
+            _context.Payments.Add(payment);
+
             await transaction.CommitAsync();
 
             return Ok(new

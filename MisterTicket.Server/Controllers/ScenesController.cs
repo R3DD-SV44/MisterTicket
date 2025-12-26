@@ -20,6 +20,44 @@ public class ScenesController : ControllerBase
         return Ok(scene);
     }
 
+    // Dans Controllers/ScenesController.cs
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> ModifyScene(int id, Scene scene)
+    {
+        if (id != scene.Id) return BadRequest();
+
+        _context.Entry(scene).State = EntityState.Modified;
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!_context.Stadia.Any(s => s.Id == id)) return NotFound();
+            else throw;
+        }
+
+        return NoContent();
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteScene(int id)
+    {
+        var scene = await _context.Stadia.FindAsync(id);
+        if (scene == null) return NotFound();
+
+        // Note: Vérifiez si des événements sont liés à cette scène avant de supprimer
+        var hasEvents = await _context.Events.AnyAsync(e => e.SceneId == id);
+        if (hasEvents) return BadRequest("Impossible de supprimer une scène associée à des événements.");
+
+        _context.Stadia.Remove(scene);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
     [HttpGet("{id}/layout")]
     [AllowAnonymous] // Tout le monde peut voir la carte interactive [cite: 5, 43]
     public async Task<IActionResult> GetLayout(int id)
