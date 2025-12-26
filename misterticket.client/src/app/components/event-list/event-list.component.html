@@ -1,0 +1,12 @@
+<h2>Événements disponibles</h2>
+
+<div *ngIf="events.length === 0">Chargement des événements...</div>
+
+<div class="event-grid">
+  <div class="event-card" *ngFor="let event of events">
+    <h3>{{ event.name }}</h3>
+    <p>{{ event.description }}</p>
+    <p><strong>Date :</strong> {{ event.date | date:'dd/MM/yyyy HH:mm' }}</p>
+    <button [routerLink]="['/events', event.id]">Voir les places</button>
+  </div>
+</div>

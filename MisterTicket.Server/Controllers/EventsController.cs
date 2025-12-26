@@ -42,7 +42,7 @@ public class EventsController : ControllerBase
         catch (DbUpdateConcurrencyException)
         {
             if (!_context.Events.Any(e => e.Id == id)) return NotFound();
-            else throw;
+            else throw; 
         }
 
         return NoContent();
