@@ -7,8 +7,8 @@ public class Seat
     public int Id { get; set; }
     public string Number { get; set; } = string.Empty;
     public string Row { get; set; } = string.Empty;   
-    public SeatStatus Status { get; set; } = SeatStatus.Free;
     public decimal Price { get; set; }  
-    public DateTime? LockedUntil { get; set; }
     public string? ReservedByUserId { get; set; }
+    public int PriceZoneId { get; set; }
+    public PriceZone? PriceZone { get; set; }
 }

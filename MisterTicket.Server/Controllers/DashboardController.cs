@@ -18,40 +18,23 @@ public class DashboardController : ControllerBase
     [HttpGet("event-stats/{eventId}")]
     public async Task<IActionResult> GetEventStats(int eventId)
     {
-        var ev = await _context.Events
-            .Include(e => e.Scene)
-            .ThenInclude(s => s.Seats)
-            .FirstOrDefaultAsync(e => e.Id == eventId);
+        var stats = await _context.EventSeats
+            .Where(es => es.EventId == eventId)
+            .Include(es => es.Seat)
+                .ThenInclude(s => s.PriceZone)
+            .ToListAsync();
 
-        if (ev == null) return NotFound("Événement non trouvé.");
+        if (!stats.Any()) return NotFound("Aucune donnée pour cet événement.");
 
-        var allSeats = ev.Scene?.Seats ?? new List<Seat>();
-
-        int totalCapacity = ev.Scene?.Capacity ?? 0;
-        int seatsPaid = allSeats.Count(s => s.Status == SeatStatus.Paid);
-        int seatsReserved = allSeats.Count(s => s.Status == SeatStatus.ReservedTemp);
-        int seatsFree = allSeats.Count(s => s.Status == SeatStatus.Free);
-
-        decimal totalRevenue = allSeats
-            .Where(s => s.Status == SeatStatus.Paid)
-            .Sum(s => s.Price);
-
-        double fillingRate = totalCapacity > 0
-            ? Math.Round((double)seatsPaid / totalCapacity * 100, 2)
-            : 0;
+        var paidSeats = stats.Where(s => s.Status == SeatStatus.Paid).ToList();
 
         return Ok(new
         {
-            EventName = ev.Name,
-            TotalCapacity = totalCapacity,
-            Stats = new
-            {
-                Paid = seatsPaid,
-                Reserved = seatsReserved,
-                Free = seatsFree,
-                FillingRate = fillingRate
-            },
-            TotalRevenue = totalRevenue
+            Paid = paidSeats.Count,
+            Reserved = stats.Count(s => s.Status == SeatStatus.ReservedTemp),
+            Free = stats.Count(s => s.Status == SeatStatus.Free),
+            Revenue = paidSeats.Sum(s => s.Seat?.PriceZone?.Price ?? 0),
+            FillingRate = Math.Round((double)paidSeats.Count / stats.Count * 100, 2)
         });
     }
 }

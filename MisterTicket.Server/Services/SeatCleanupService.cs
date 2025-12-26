@@ -25,25 +25,40 @@ namespace MisterTicket.Server.Services
                 {
                     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-                    var expiredSeats = context.Seats
-                        .Where(s => s.Status == SeatStatus.ReservedTemp && s.LockedUntil < DateTime.UtcNow)
-                        .ToList();
+                    var expiredEventSeats = await context.EventSeats
+                        .Where(es => es.Status == SeatStatus.ReservedTemp && es.LockedUntil < DateTime.UtcNow)
+                        .ToListAsync(stoppingToken);
 
-                    foreach (var seat in expiredSeats)
+                    foreach (var eventSeat in expiredEventSeats)
                     {
-                        seat.Status = SeatStatus.Free;
-                        seat.LockedUntil = null;
+                        var userId = eventSeat.ReservedByUserId;
 
-                        var relatedRes = await context.Reservations
-                        .Where(r => r.SelectedSeats.Any(s => s.Id == seat.Id) && r.Status == ReservationStatus.OnGoing)
-                        .FirstOrDefaultAsync();
+                        if (userId.HasValue)
+                        {
+                            var relatedRes = await context.Reservations
+                                .Include(r => r.SelectedSeats) 
+                                .Where(r => r.UserId == userId.Value.ToString() 
+                                       && r.Status == ReservationStatus.OnGoing
+                                       && r.SelectedSeats.Any(s => s.Id == eventSeat.SeatId))
+                                .FirstOrDefaultAsync();
 
-                        if (relatedRes != null) relatedRes.Status = ReservationStatus.Canceled;
+                            if (relatedRes != null)
+                            {
+                                relatedRes.Status = ReservationStatus.Canceled;
+                            }
+                        }
 
-                        await _hubContext.Clients.All.SendAsync("ReceiveSeatStatusUpdate", seat.Id, SeatStatus.Free);
+                        eventSeat.Status = SeatStatus.Free;
+                        eventSeat.LockedUntil = null;
+                        eventSeat.ReservedByUserId = null;
+
+                        await _hubContext.Clients.All.SendAsync("ReceiveSeatStatusUpdate", eventSeat.EventId, eventSeat.SeatId, SeatStatus.Free);
                     }
 
-                    if (expiredSeats.Any()) await context.SaveChangesAsync();
+                    if (expiredEventSeats.Any())
+                    {
+                        await context.SaveChangesAsync();
+                    }
                 }
                 await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
             }

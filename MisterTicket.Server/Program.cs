@@ -26,7 +26,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = "MisterTicket",
             ValidAudience = "MisterTicket",
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("VotreCleSecreteTresLongueEtSecurisee"))
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "CleParDefautSiManquante"))
         };
     });
 
