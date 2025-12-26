@@ -9,6 +9,10 @@ using System.Security.Claims;
 
 namespace MisterTicket.Server.Controllers;
 
+public class ReservationRequest
+{     public int EventId { get; set; }
+    public List<int> SeatIds { get; set; } = new();
+}
 // Objet pour recevoir les données de confirmation
 public record ConfirmReservationRequest(int EventId, List<int> SeatIds);
 
@@ -27,25 +31,18 @@ public class ReservationsController : ControllerBase
     }
 
     [HttpPost("confirm")]
-    public async Task<IActionResult> CreateReservation([FromBody] ConfirmReservationRequest request)
+    public async Task<IActionResult> CreateReservation([FromBody] ReservationRequest request)
     {
-        // 1. Récupération et conversion de l'ID utilisateur
-        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (!int.TryParse(userIdClaim, out int userId)) return Unauthorized();
+        // Récupération et conversion de l'ID utilisateur
+        var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
 
-        // 2. Récupération des sièges avec leur zone tarifaire pour le prix
-        var seats = await _context.Seats
-            .Include(s => s.PriceZone)
-            .Where(s => request.SeatIds.Contains(s.Id))
-            .ToListAsync();
+        var seats = await _context.Seats.Where(s => request.SeatIds.Contains(s.Id)).ToListAsync();
 
-        if (!seats.Any()) return BadRequest("Aucun siège sélectionné.");
-
-        // 3. Création de la réservation avec l'EventId
         var reservation = new Reservation
         {
-            UserId = userId,
-            EventId = request.EventId,
+            UserId = userId, // Utilise maintenant l'int
+            EventId = request.EventId, // Définit l'ID de l'événement
             SelectedSeats = seats,
             Status = ReservationStatus.OnGoing,
             ReservationDate = DateTime.UtcNow
@@ -54,10 +51,7 @@ public class ReservationsController : ControllerBase
         _context.Reservations.Add(reservation);
         await _context.SaveChangesAsync();
 
-        // Calcul du total via les zones tarifaires
-        var total = seats.Sum(s => s.PriceZone?.Price ?? 0);
-
-        return Ok(new { reservationId = reservation.Id, total });
+        return Ok(new { reservationId = reservation.Id, total = seats.Sum(s => s.Price) });
     }
 
     [HttpPost("{id}/cancel")]

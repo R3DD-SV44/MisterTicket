@@ -1,6 +1,5 @@
 ﻿namespace MisterTicket.Server.Models;
 
-public enum SeatStatus { Free, ReservedTemp, Paid }
 
 public class Seat
 {

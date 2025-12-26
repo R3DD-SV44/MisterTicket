@@ -36,7 +36,7 @@ namespace MisterTicket.Server.Services
                         if (userId.HasValue)
                         {
                             var relatedRes = await context.Reservations
-                                .Include(r => r.SelectedSeats) 
+                                .Include(r => r.SelectedSeats)
                                 .Where(r => r.UserId == userId.Value
                                        && r.Status == ReservationStatus.OnGoing
                                        && r.SelectedSeats.Any(s => s.Id == eventSeat.SeatId))
