@@ -13,6 +13,7 @@ namespace MisterTicket.Server.Models
 
         // Changez "string" en "int" pour correspondre à User.Id
         public int UserId { get; set; }
+        public User? User { get; set; }
 
         // Assurez-vous d'avoir bien ajouté l'EventId suite à nos discussions
         public int EventId { get; set; }

@@ -7,6 +7,11 @@ using MisterTicket.Server.Hubs;
 using MisterTicket.Server.Models;
 using System.Security.Claims;
 
+namespace MisterTicket.Server.Controllers;
+
+// Objet pour recevoir les données de confirmation
+public record ConfirmReservationRequest(int EventId, List<int> SeatIds);
+
 [Authorize]
 [ApiController]
 [Route("api/[controller]")]
@@ -22,15 +27,25 @@ public class ReservationsController : ControllerBase
     }
 
     [HttpPost("confirm")]
-    public async Task<IActionResult> CreateReservation([FromBody] List<int> seatIds)
+    public async Task<IActionResult> CreateReservation([FromBody] ConfirmReservationRequest request)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        // 1. Récupération et conversion de l'ID utilisateur
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!int.TryParse(userIdClaim, out int userId)) return Unauthorized();
 
-        var seats = await _context.Seats.Where(s => seatIds.Contains(s.Id)).ToListAsync();
+        // 2. Récupération des sièges avec leur zone tarifaire pour le prix
+        var seats = await _context.Seats
+            .Include(s => s.PriceZone)
+            .Where(s => request.SeatIds.Contains(s.Id))
+            .ToListAsync();
 
+        if (!seats.Any()) return BadRequest("Aucun siège sélectionné.");
+
+        // 3. Création de la réservation avec l'EventId
         var reservation = new Reservation
         {
-            UserId = userId!,
+            UserId = userId,
+            EventId = request.EventId,
             SelectedSeats = seats,
             Status = ReservationStatus.OnGoing,
             ReservationDate = DateTime.UtcNow
@@ -39,12 +54,18 @@ public class ReservationsController : ControllerBase
         _context.Reservations.Add(reservation);
         await _context.SaveChangesAsync();
 
-        return Ok(new { reservationId = reservation.Id, total = seats.Sum(s => s.Price) });
+        // Calcul du total via les zones tarifaires
+        var total = seats.Sum(s => s.PriceZone?.Price ?? 0);
+
+        return Ok(new { reservationId = reservation.Id, total });
     }
 
     [HttpPost("{id}/cancel")]
     public async Task<IActionResult> CancelReservation(int id)
     {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!int.TryParse(userIdClaim, out int userId)) return Unauthorized();
+
         using var transaction = await _context.Database.BeginTransactionAsync();
         try
         {
@@ -53,6 +74,9 @@ public class ReservationsController : ControllerBase
                 .FirstOrDefaultAsync(r => r.Id == id);
 
             if (reservation == null) return NotFound("Réservation introuvable.");
+
+            // Sécurité : Seul le propriétaire peut annuler
+            if (reservation.UserId != userId) return Forbid();
 
             if (reservation.Status != ReservationStatus.OnGoing)
             {
@@ -63,6 +87,7 @@ public class ReservationsController : ControllerBase
 
             var seatIds = reservation.SelectedSeats.Select(s => s.Id).ToList();
 
+            // Mise à jour de la table de liaison EventSeats
             var eventSeats = await _context.EventSeats
                 .Where(es => es.EventId == reservation.EventId && seatIds.Contains(es.SeatId))
                 .ToListAsync();
@@ -79,7 +104,7 @@ public class ReservationsController : ControllerBase
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
 
-            return Ok(new { message = "Réservation annulée et sièges libérés pour cet événement." });
+            return Ok(new { message = "Réservation annulée et sièges libérés." });
         }
         catch (Exception)
         {
@@ -91,26 +116,27 @@ public class ReservationsController : ControllerBase
     [HttpPost("{id}/pay")]
     public async Task<IActionResult> Pay(int id)
     {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!int.TryParse(userIdClaim, out int userId)) return Unauthorized();
+
         using var transaction = await _context.Database.BeginTransactionAsync();
         try
         {
-            // 1. On récupère la réservation avec ses sièges associés
             var res = await _context.Reservations
                 .Include(r => r.SelectedSeats)
                 .FirstOrDefaultAsync(r => r.Id == id);
 
             if (res == null) return NotFound("Réservation introuvable.");
+
+            if (res.UserId != userId) return Forbid();
+
             if (res.Status != ReservationStatus.OnGoing)
                 return BadRequest("Seules les réservations en cours peuvent être payées.");
 
-            // 2. On change le statut de la réservation
             res.Status = ReservationStatus.Paid;
 
-            // 3. On met à jour les entrées correspondantes dans EventSeats
-            // On récupère les IDs des sièges de cette réservation
             var seatIds = res.SelectedSeats.Select(s => s.Id).ToList();
 
-            // On cherche les EventSeats liés à CET événement pour CES sièges
             var eventSeats = await _context.EventSeats
                 .Where(es => es.EventId == res.EventId && seatIds.Contains(es.SeatId))
                 .ToListAsync();
@@ -118,18 +144,13 @@ public class ReservationsController : ControllerBase
             foreach (var es in eventSeats)
             {
                 es.Status = SeatStatus.Paid;
-                es.LockedUntil = null; // Libération définitive du verrou temporel
+                es.LockedUntil = null;
+
+                await _hubContext.Clients.All.SendAsync("ReceiveSeatStatusUpdate", res.EventId, es.SeatId, SeatStatus.Paid);
             }
 
-            // 4. Sauvegarde et validation de la transaction
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
-
-            // 5. Notification SignalR (On informe le front que ces sièges sont maintenant payés)
-            foreach (var sId in seatIds)
-            {
-                await _hubContext.Clients.All.SendAsync("ReceiveSeatStatusUpdate", res.EventId, sId, SeatStatus.Paid);
-            }
 
             return Ok(new
             {
@@ -140,7 +161,7 @@ public class ReservationsController : ControllerBase
         catch (Exception)
         {
             await transaction.RollbackAsync();
-            return StatusCode(500, "Une erreur est survenue lors du paiement.");
+            return StatusCode(500, "Erreur lors du paiement.");
         }
     }
 }

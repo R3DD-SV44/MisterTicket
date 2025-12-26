@@ -8,7 +8,7 @@ public class Seat
     public string Number { get; set; } = string.Empty;
     public string Row { get; set; } = string.Empty;   
     public decimal Price { get; set; }  
-    public string? ReservedByUserId { get; set; }
+    public int? ReservedByUserId { get; set; }
     public int PriceZoneId { get; set; }
     public PriceZone? PriceZone { get; set; }
 }

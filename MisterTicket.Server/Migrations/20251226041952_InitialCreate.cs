@@ -33,7 +33,7 @@ namespace MisterTicket.Server.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Password = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Role = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -70,7 +70,7 @@ namespace MisterTicket.Server.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Price = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     ColorHex = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     SceneId = table.Column<int>(type: "int", nullable: false)
                 },
@@ -91,19 +91,20 @@ namespace MisterTicket.Server.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    EventId = table.Column<int>(type: "int", nullable: false),
                     ReservationDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Status = table.Column<int>(type: "int", nullable: false),
-                    UserId1 = table.Column<int>(type: "int", nullable: true)
+                    Status = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Reservations", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Reservations_Users_UserId1",
-                        column: x => x.UserId1,
+                        name: "FK_Reservations_Users_UserId",
+                        column: x => x.UserId,
                         principalTable: "Users",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -113,7 +114,7 @@ namespace MisterTicket.Server.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Reference = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Value = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Value = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     Status = table.Column<int>(type: "int", nullable: false),
                     ReservationId = table.Column<int>(type: "int", nullable: false)
                 },
@@ -136,16 +137,20 @@ namespace MisterTicket.Server.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Number = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Row = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Status = table.Column<int>(type: "int", nullable: false),
-                    Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    LockedUntil = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    ReservedByUserId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Price = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    ReservedByUserId = table.Column<int>(type: "int", nullable: true),
+                    PriceZoneId = table.Column<int>(type: "int", nullable: false),
                     ReservationId = table.Column<int>(type: "int", nullable: true),
                     SceneId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Seats", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Seats_PriceZones_PriceZoneId",
+                        column: x => x.PriceZoneId,
+                        principalTable: "PriceZones",
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Seats_Reservations_ReservationId",
                         column: x => x.ReservationId,
@@ -158,10 +163,50 @@ namespace MisterTicket.Server.Migrations
                         principalColumn: "Id");
                 });
 
+            migrationBuilder.CreateTable(
+                name: "EventSeats",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    EventId = table.Column<int>(type: "int", nullable: false),
+                    SeatId = table.Column<int>(type: "int", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    LockedUntil = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    ReservedByUserId = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_EventSeats", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_EventSeats_Events_EventId",
+                        column: x => x.EventId,
+                        principalTable: "Events",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_EventSeats_Seats_SeatId",
+                        column: x => x.SeatId,
+                        principalTable: "Seats",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_Events_SceneId",
                 table: "Events",
                 column: "SceneId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_EventSeats_EventId_SeatId",
+                table: "EventSeats",
+                columns: new[] { "EventId", "SeatId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_EventSeats_SeatId",
+                table: "EventSeats",
+                column: "SeatId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Payments_ReservationId",
@@ -174,9 +219,14 @@ namespace MisterTicket.Server.Migrations
                 column: "SceneId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Reservations_UserId1",
+                name: "IX_Reservations_UserId",
                 table: "Reservations",
-                column: "UserId1");
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Seats_PriceZoneId",
+                table: "Seats",
+                column: "PriceZoneId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Seats_ReservationId",
@@ -193,16 +243,19 @@ namespace MisterTicket.Server.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "Events");
+                name: "EventSeats");
 
             migrationBuilder.DropTable(
                 name: "Payments");
 
             migrationBuilder.DropTable(
-                name: "PriceZones");
+                name: "Events");
 
             migrationBuilder.DropTable(
                 name: "Seats");
+
+            migrationBuilder.DropTable(
+                name: "PriceZones");
 
             migrationBuilder.DropTable(
                 name: "Reservations");
