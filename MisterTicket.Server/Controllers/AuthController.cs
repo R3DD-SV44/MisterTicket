@@ -24,7 +24,7 @@ public class AuthController : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> Register(User user)
     {
-        // Hachage du mot de passe recommandé ici [cite: 11]
+        user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
         return Ok(new { message = "Utilisateur créé" });
@@ -36,10 +36,15 @@ public class AuthController : ControllerBase
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == login.Email);
         if (user == null) return Unauthorized();
 
+        if (user == null || !BCrypt.Net.BCrypt.Verify(login.Password, user.Password))
+        {
+            return Unauthorized(new { message = "Email ou mot de passe incorrect" });
+        }
+
         var claims = new[] {
             new Claim(ClaimTypes.Name, user.Name),
             new Claim(ClaimTypes.Email, user.Email),
-            new Claim(ClaimTypes.Role, user.Role.ToString()) // Admin, Organisateur, Client 
+            new Claim(ClaimTypes.Role, user.Role.ToString())
         };
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));

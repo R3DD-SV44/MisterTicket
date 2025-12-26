@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.SignalR;
 using MisterTicket.Server.Data;
 using MisterTicket.Server.Hubs;
 using MisterTicket.Server.Models;
@@ -24,7 +25,6 @@ namespace MisterTicket.Server.Services
                 {
                     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-                    // Trouver les sièges expirés
                     var expiredSeats = context.Seats
                         .Where(s => s.Status == SeatStatus.ReservedTemp && s.LockedUntil < DateTime.UtcNow)
                         .ToList();
@@ -33,6 +33,13 @@ namespace MisterTicket.Server.Services
                     {
                         seat.Status = SeatStatus.Free;
                         seat.LockedUntil = null;
+
+                        var relatedRes = await context.Reservations
+                        .Where(r => r.SelectedSeats.Any(s => s.Id == seat.Id) && r.Status == ReservationStatus.OnGoing)
+                        .FirstOrDefaultAsync();
+
+                        if (relatedRes != null) relatedRes.Status = ReservationStatus.Canceled;
+
                         await _hubContext.Clients.All.SendAsync("ReceiveSeatStatusUpdate", seat.Id, SeatStatus.Free);
                     }
 

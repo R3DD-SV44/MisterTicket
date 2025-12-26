@@ -32,7 +32,7 @@ public class ReservationsController : ControllerBase
         {
             UserId = userId!,
             SelectedSeats = seats,
-            Status = ReservationStatus.EnCours,
+            Status = ReservationStatus.OnGoing,
             ReservationDate = DateTime.UtcNow
         };
 
@@ -42,16 +42,44 @@ public class ReservationsController : ControllerBase
         return Ok(new { reservationId = reservation.Id, total = seats.Sum(s => s.Price) });
     }
 
+    [HttpPost("{id}/cancel")]
+    public async Task<IActionResult> CancelReservation(int id)
+    {
+        var reservation = await _context.Reservations
+            .Include(r => r.SelectedSeats)
+            .FirstOrDefaultAsync(r => r.Id == id);
+
+        if (reservation == null) return NotFound();
+
+        if (reservation.Status != ReservationStatus.OnGoing)
+        {
+            return BadRequest("Seules les réservations en cours peuvent être annulées.");
+        }
+
+        reservation.Status = ReservationStatus.Canceled;
+
+        foreach (var seat in reservation.SelectedSeats)
+        {
+            seat.Status = SeatStatus.Free;
+            seat.LockedUntil = null;
+            await _hubContext.Clients.All.SendAsync("ReceiveSeatStatusUpdate", seat.Id, SeatStatus.Free);
+        }
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = "Réservation annulée et sièges libérés." });
+    }
+
     [HttpPost("{id}/pay")]
     public async Task<IActionResult> Pay(int id)
     {
         var res = await _context.Reservations.Include(r => r.SelectedSeats).FirstOrDefaultAsync(r => r.Id == id);
         if (res == null) return NotFound();
 
-        res.Status = ReservationStatus.Payee;
+        res.Status = ReservationStatus.Paid;
         foreach (var seat in res.SelectedSeats)
         {
-            seat.Status = SeatStatus.Paid; // Passage à l'état "payé" [cite: 25, 45]
+            seat.Status = SeatStatus.Paid; 
         }
 
         await _context.SaveChangesAsync();
