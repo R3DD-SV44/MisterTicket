@@ -9,7 +9,7 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<User> Users { get; set; }
     public DbSet<Event> Events { get; set; }
-    public DbSet<Scene> Stadia { get; set; }
+    public DbSet<Scene> Scene { get; set; }
     public DbSet<PriceZone> PriceZones { get; set; }
     public DbSet<Seat> Seats { get; set; }
     public DbSet<Reservation> Reservations { get; set; }

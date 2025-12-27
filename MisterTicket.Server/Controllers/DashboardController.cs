@@ -15,7 +15,9 @@ public class DashboardController : ControllerBase
         _context = context;
     }
 
-    [HttpGet("event-stats/{eventId}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [HttpGet("{eventId}_event_stats")]
     public async Task<IActionResult> GetEventStats(int eventId)
     {
         var stats = await _context.EventSeats

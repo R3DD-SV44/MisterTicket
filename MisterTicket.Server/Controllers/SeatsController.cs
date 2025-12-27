@@ -21,25 +21,52 @@ namespace MisterTicket.Server.Controllers
             _hubContext = hubContext;
         }
 
-        [HttpPost("lock/{eventId}/{seatId}")]
+        [HttpPost("lock/event_{eventId}/seat_{seatId}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> LockSeat(int eventId, int seatId)
         {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+            {
+                return Unauthorized(new { message = "User must be authenticated to lock a seat." });
+            }
 
             var eventSeat = await _context.EventSeats
                 .FirstOrDefaultAsync(es => es.EventId == eventId && es.SeatId == seatId);
 
-            if (eventSeat == null) return NotFound("Siège non configuré pour cet événement.");
-            if (eventSeat.Status != SeatStatus.Free) return BadRequest("Siège indisponible.");
+            if (eventSeat == null)
+            {
+                return NotFound(new { message = "This seat is not configured for the specified event." });
+            }
+
+            if (eventSeat.Status != SeatStatus.Free)
+            {
+                return BadRequest(new { message = "Seat is no longer available." });
+            }
 
             eventSeat.Status = SeatStatus.ReservedTemp;
             eventSeat.LockedUntil = DateTime.UtcNow.AddMinutes(10);
             eventSeat.ReservedByUserId = userId;
 
-            await _context.SaveChangesAsync();
-            await _hubContext.Clients.All.SendAsync("ReceiveSeatStatusUpdate", eventId, seatId, SeatStatus.ReservedTemp);
+            try
+            {
+                await _context.SaveChangesAsync();
 
-            return Ok(new { message = "Siège bloqué", lockUntil = eventSeat.LockedUntil });
+                await _hubContext.Clients.All.SendAsync("ReceiveSeatStatusUpdate", eventId, seatId, SeatStatus.ReservedTemp);
+
+                return Ok(new
+                {
+                    message = "Seat successfully locked for 10 minutes.",
+                    lockUntil = eventSeat.LockedUntil
+                });
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return BadRequest(new { message = "Another user just locked this seat. Please choose another one." });
+            }
         }
     }
 }

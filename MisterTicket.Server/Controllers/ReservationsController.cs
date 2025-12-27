@@ -5,16 +5,11 @@ using Microsoft.EntityFrameworkCore;
 using MisterTicket.Server.Data;
 using MisterTicket.Server.Hubs;
 using MisterTicket.Server.Models;
+using MisterTicket.Server.DTOs;
 using System.Security.Claims;
 
-namespace MisterTicket.Server.Controllers;
 
-public class ReservationRequest
-{     public int EventId { get; set; }
-    public List<int> SeatIds { get; set; } = new();
-}
-// Objet pour recevoir les données de confirmation
-public record ConfirmReservationRequest(int EventId, List<int> SeatIds);
+namespace MisterTicket.Server.Controllers;
 
 [Authorize]
 [ApiController]
@@ -31,34 +26,78 @@ public class ReservationsController : ControllerBase
     }
 
     [HttpPost("confirm")]
-    public async Task<IActionResult> CreateReservation([FromBody] ReservationRequest request)
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> CreateReservation([FromBody] ReservationDto request)
     {
-        // Récupération et conversion de l'ID utilisateur
         var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+        if (!int.TryParse(userIdStr, out int userId))
+        {
+            return Unauthorized(new { message = "User is not authenticated." });
+        }
 
-        var seats = await _context.Seats.Where(s => request.SeatIds.Contains(s.Id)).ToListAsync();
+        var eventExists = await _context.Events.AnyAsync(e => e.Id == request.EventId);
+        if (!eventExists)
+        {
+            return NotFound(new { message = $"Event with ID {request.EventId} not found." });
+        }
+
+        var seats = await _context.Seats
+            .Where(s => request.SeatIds.Contains(s.Id))
+            .ToListAsync();
+
+        if (seats.Count != request.SeatIds.Count)
+        {
+            return BadRequest(new { message = "One or more selected seats do not exist." });
+        }
 
         var reservation = new Reservation
         {
-            UserId = userId, // Utilise maintenant l'int
-            EventId = request.EventId, // Définit l'ID de l'événement
+            UserId = userId,
+            EventId = request.EventId,
             SelectedSeats = seats,
             Status = ReservationStatus.OnGoing,
             ReservationDate = DateTime.UtcNow
         };
 
         _context.Reservations.Add(reservation);
-        await _context.SaveChangesAsync();
 
-        return Ok(new { reservationId = reservation.Id, total = seats.Sum(s => s.Price) });
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            return BadRequest(new { message = "An error occurred while saving the reservation." });
+        }
+
+        request.Id = reservation.Id;
+        var total = seats.Sum(s => s.Price);
+
+        return CreatedAtAction("GetReservationById", new { id = reservation.Id }, new
+        {
+            reservationId = reservation.Id,
+            total = total,
+            details = request
+        });
     }
 
     [HttpPost("{id}/cancel")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> CancelReservation(int id)
     {
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (!int.TryParse(userIdClaim, out int userId)) return Unauthorized();
+        if (!int.TryParse(userIdClaim, out int userId))
+        {
+            return Unauthorized(new { message = "User is not authenticated." });
+        }
 
         using var transaction = await _context.Database.BeginTransactionAsync();
         try
@@ -67,21 +106,31 @@ public class ReservationsController : ControllerBase
                 .Include(r => r.SelectedSeats)
                 .FirstOrDefaultAsync(r => r.Id == id);
 
-            if (reservation == null) return NotFound("Réservation introuvable.");
+            if (reservation == null)
+            {
+                return NotFound(new { message = $"Reservation with ID {id} not found." });
+            }
 
-            // Sécurité : Seul le propriétaire peut annuler
-            if (reservation.UserId != userId) return Forbid();
+            var eventExists = await _context.Events.AnyAsync(e => e.Id == reservation.EventId);
+            if (!eventExists)
+            {
+                return NotFound(new { message = $"The event associated with this reservation (ID: {reservation.EventId}) no longer exists." });
+            }
+
+            if (reservation.UserId != userId)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new { message = "You do not have permission to cancel this reservation." });
+            }
 
             if (reservation.Status != ReservationStatus.OnGoing)
             {
-                return BadRequest("Seules les réservations en cours peuvent être annulées.");
+                return BadRequest(new { message = "Only ongoing reservations can be canceled." });
             }
 
             reservation.Status = ReservationStatus.Canceled;
 
             var seatIds = reservation.SelectedSeats.Select(s => s.Id).ToList();
 
-            // Mise à jour de la table de liaison EventSeats
             var eventSeats = await _context.EventSeats
                 .Where(es => es.EventId == reservation.EventId && seatIds.Contains(es.SeatId))
                 .ToListAsync();
@@ -98,20 +147,29 @@ public class ReservationsController : ControllerBase
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
 
-            return Ok(new { message = "Réservation annulée et sièges libérés." });
+            return Ok(new { message = "Reservation canceled and seats released." });
         }
         catch (Exception)
         {
             await transaction.RollbackAsync();
-            return StatusCode(500, "Erreur lors de l'annulation.");
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred during cancellation." });
         }
     }
 
     [HttpPost("{id}/pay")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Pay(int id)
     {
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (!int.TryParse(userIdClaim, out int userId)) return Unauthorized();
+        if (!int.TryParse(userIdClaim, out int userId))
+        {
+            return Unauthorized(new { message = "User is not authenticated." });
+        }
 
         using var transaction = await _context.Database.BeginTransactionAsync();
         try
@@ -120,12 +178,26 @@ public class ReservationsController : ControllerBase
                 .Include(r => r.SelectedSeats)
                 .FirstOrDefaultAsync(r => r.Id == id);
 
-            if (res == null) return NotFound("Réservation introuvable.");
+            if (res == null)
+            {
+                return NotFound(new { message = $"Reservation with ID {id} not found." });
+            }
 
-            if (res.UserId != userId) return Forbid();
+            var eventExists = await _context.Events.AnyAsync(e => e.Id == res.EventId);
+            if (!eventExists)
+            {
+                return NotFound(new { message = $"The event associated with this reservation (ID: {res.EventId}) no longer exists." });
+            }
+
+            if (res.UserId != userId)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new { message = "You do not have permission to pay for this reservation." });
+            }
 
             if (res.Status != ReservationStatus.OnGoing)
-                return BadRequest("Seules les réservations en cours peuvent être payées.");
+            {
+                return BadRequest(new { message = "Only ongoing reservations can be paid." });
+            }
 
             res.Status = ReservationStatus.Paid;
 
@@ -143,8 +215,6 @@ public class ReservationsController : ControllerBase
                 await _hubContext.Clients.All.SendAsync("ReceiveSeatStatusUpdate", res.EventId, es.SeatId, SeatStatus.Paid);
             }
 
-            await _context.SaveChangesAsync();
-
             var payment = new Payment
             {
                 Reference = $"PAY-{Guid.NewGuid().ToString().Substring(0, 8)}",
@@ -154,18 +224,19 @@ public class ReservationsController : ControllerBase
             };
             _context.Payments.Add(payment);
 
+            await _context.SaveChangesAsync();
             await transaction.CommitAsync();
 
             return Ok(new
             {
-                message = "Paiement fictif validé",
+                message = "Fictitious payment validated.",
                 pdfUrl = $"/api/tickets/{id}/pdf"
             });
         }
         catch (Exception)
         {
             await transaction.RollbackAsync();
-            return StatusCode(500, "Erreur lors du paiement.");
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred during the payment process." });
         }
     }
 }

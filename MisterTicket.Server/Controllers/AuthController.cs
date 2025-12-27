@@ -1,8 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity.Data;
+﻿using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using MisterTicket.Server.Data;
+using MisterTicket.Server.DTOs;
 using MisterTicket.Server.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -21,15 +22,26 @@ public class AuthController : ControllerBase
         _config = config;
     }
 
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [HttpPost("register")]
-    public async Task<IActionResult> Register(User user)
+    public async Task<IActionResult> Register(UserDto dto)
     {
-        user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
+        var user = new User
+        {
+            Name = dto.Name,
+            Email = dto.Email,
+            Password = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+            Role = UserRole.Customer
+        };
+
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
         return Ok(new { message = "Utilisateur créé" });
     }
 
+
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest login)
     {

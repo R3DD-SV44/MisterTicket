@@ -73,6 +73,14 @@ builder.Services.AddSwaggerGen(opt =>
     });
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngular",
+        policy => policy.WithOrigins("https://localhost:4200") // Port de votre Angular
+                        .AllowAnyMethod()
+                        .AllowAnyHeader());
+});
+
 var app = builder.Build();
 
 // --- CONFIGURATION DU PIPELINE (L'ordre est très important) ---
@@ -96,6 +104,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseCors("AllowAngular"); // Doit être placé AVANT UseAuthentication/Authorization
 
 // 3. IMPORTANT : Ajoutez UseAuthentication AVANT UseAuthorization
 // Sinon, l'attribut [Authorize] ne saura jamais qui vous êtes.
