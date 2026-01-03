@@ -1,11 +1,28 @@
 <div class="night-theme">
+  <div class="stars"></div>
+  <div class="stars2"></div>
+  <nav class="auth-buttons">
+
+    <ng-container *ngIf="!isLoggedIn">
+      <button class="btn-auth outline" routerLink="/auth/register">S'inscrire</button>
+      <button class="btn-auth solid" routerLink="/auth/login">S'authentifier</button>
+    </ng-container>
+
+    <div class="user-nav" *ngIf="isLoggedIn">
+      <ng-container *ngIf="isOrganiser">
+        <button class="btn-auth outline" routerLink="/organiser/create-scene">+ Scène</button>
+        <button class="btn-auth outline" routerLink="/organiser/create-event">+ Événement</button>
+      </ng-container>
+
+      <button *ngIf="isAdmin" class="btn-auth admin" routerLink="/admin/dashboard">Contrôle</button>
+      <button class="btn-auth outline" (click)="onLogout()">Déconnexion</button>
+    </div>
+
+  </nav>
   <header class="hero">
-    <div class="stars"></div>
-    <div class="stars2"></div>
     <div class="hero-content">
       <h1 class="japanese-title">ミスターチケット</h1>
       <h2 class="main-title">MisterTicket</h2>
-      <p class="subtitle">Réservez votre place sous les étoiles du spectacle.</p>
       <div class="torii-divider"></div>
     </div>
   </header>

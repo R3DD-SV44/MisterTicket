@@ -1,1 +1,13 @@
 /* You can add global styles to this file, and also import other style files */
+/* src/styles.css */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  /* Une couleur sombre de base pour ne plus jamais voir de blanc */
+  background-color: #050b18;
+}
+app-root {
+  display: block;
+  min-height: 100vh;
+}

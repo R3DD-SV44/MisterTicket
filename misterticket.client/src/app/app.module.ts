@@ -5,17 +5,25 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { HomeComponent } from './components/home/home.component';
 import { EventListComponent } from './components/event-list/event-list.component';
+import { AuthenticationComponent } from './components/authentication/authentication.component';
+import { FormsModule } from '@angular/forms';
+import { CreateSceneComponent } from './components/create-scene/create-scene.component';
+import { CreateEventComponent } from './components/create-event/create-event.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     HomeComponent,
-    EventListComponent 
+    EventListComponent,
+    AuthenticationComponent,
+    CreateSceneComponent,
+    CreateEventComponent 
   ],
   imports: [
     BrowserModule,
     HttpClientModule,
-    AppRoutingModule
+    AppRoutingModule,
+    FormsModule
   ],
   providers: [],
   bootstrap: [AppComponent]

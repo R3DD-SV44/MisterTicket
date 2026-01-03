@@ -6,6 +6,79 @@
   font-family: 'Segoe UI', Roboto, sans-serif;
 }
 
+/* home.component.css */
+
+.user-nav {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.user-welcome {
+  color: #8da9c4;
+  font-size: 0.9rem;
+}
+
+  .user-welcome strong {
+    color: white;
+  }
+
+/* Style spécifique pour le bouton Admin */
+.btn-auth.admin {
+  background: transparent;
+  color: #ffcc00; /* Jaune/Or pour l'admin */
+  border: 1px solid #ffcc00;
+}
+
+  .btn-auth.admin:hover {
+    background: rgba(255, 204, 0, 0.1);
+  }
+.auth-buttons {
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  display: flex;
+  gap: 15px;
+  z-index: 100; /* Doit être au-dessus du hero */
+}
+
+.btn-auth {
+  padding: 8px 18px;
+  border-radius: 5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+  .btn-auth.outline {
+    background: transparent;
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+  }
+
+    .btn-auth.outline:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: white;
+    }
+
+  .btn-auth.solid {
+    background: #ff4d4d; /* Rouge Japon */
+    color: white;
+    border: 1px solid #ff4d4d;
+  }
+
+    .btn-auth.solid:hover {
+      background: #cc0000;
+    }
+
+.night-theme {
+  min-height: 100vh;
+  /* On récupère le dégradé qui était dans .hero */
+  background: radial-gradient(circle at center, #1b2735 0%, #090a0f 100%);
+  display: flex;
+  flex-direction: column;
+}
 /* --- Ambiance Ciel Étoilé --- */
 .hero {
   position: relative;
@@ -14,7 +87,7 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  background: radial-gradient(circle at center, #1b2735 0%, #090a0f 100%);
+  background: transparent;
 }
 
 /* Effet étoiles (simplifié) */
@@ -74,8 +147,8 @@
 /* --- Grille d'événements (Glassmorphism) --- */
 .container {
   max-width: 1200px;
-  margin: -50px auto 50px;
-  padding: 0 20px;
+  margin: -50px auto 0;
+  padding: 0 20px 100px;
   position: relative;
   z-index: 20;
 }
@@ -145,4 +218,13 @@
 .location {
   font-size: 0.85rem;
   color: #8da9c4;
+}
+
+.home-container {
+  /* Assure que le fond bleu/étoilé descend jusqu'en bas de l'écran */
+  min-height: 100vh;
+  width: 100%;
+  background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+  overflow: hidden;
+  position: relative;
 }

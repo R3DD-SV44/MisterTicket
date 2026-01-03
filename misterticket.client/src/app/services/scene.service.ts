@@ -1,0 +1,20 @@
+// src/app/services/scene.service.ts
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+
+@Injectable({ providedIn: 'root' })
+export class SceneService {
+  private apiUrl = '/api/Scenes';
+
+  constructor(private http: HttpClient) { }
+
+  getScenes(): Observable<any[]> {
+    return this.http.get<any[]>(this.apiUrl);
+  }
+
+  createScene(scene: any): Observable<any> {
+    // Les propriétés doivent correspondre au SceneDto (name, maxRows, maxColumns)
+    return this.http.post(this.apiUrl, scene);
+  }
+}

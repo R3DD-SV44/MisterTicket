@@ -45,7 +45,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-builder.Services.AddHostedService<SeatCleanupService>();
+//builder.Services.AddHostedService<SeatCleanupService>();
 
 builder.Services.AddSwaggerGen(opt =>
 {

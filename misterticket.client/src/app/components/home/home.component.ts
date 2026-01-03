@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { EventService } from '../../services/event.service';
 // Assure-toi que l'interface Event existe ou adapte selon ton DTO
-import { EventDto } from '../../models/event.model';
+import { Event } from '../../models/event.model';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-home',
@@ -10,12 +11,32 @@ import { EventDto } from '../../models/event.model';
 })
 export class HomeComponent implements OnInit {
   events: any[] = []; // Utilise EventDto[] si défini
-  loading: boolean = true;
+  loading = true;
 
-  constructor(private eventService: EventService) { }
+  isLoggedIn = false;
+  userName = '';
+  isAdmin = false;
+  isOrganiser = false;
+
+  constructor(private eventService: EventService, private authService: AuthService) { }
 
   ngOnInit(): void {
+    this.checkAuth();
     this.loadEvents();
+  }
+
+  checkAuth() {
+    this.isLoggedIn = this.authService.isLoggedIn();
+    if (this.isLoggedIn) {
+      const user = this.authService.getUserInfo();
+      this.userName = user?.name || 'Utilisateur';
+      this.isAdmin = this.authService.isAdmin();
+    }
+  }
+
+  onLogout() {
+    this.authService.logout();
+    window.location.reload(); // Simple pour rafraîchir l'état de l'interface
   }
 
   loadEvents(): void {

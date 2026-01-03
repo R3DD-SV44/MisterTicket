@@ -1,0 +1,36 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <h2 class="auth-title">Nouvelle Scène / 新しいステージ</h2>
+    <div class="torii-divider"></div>
+
+    <p class="subtitle-info">Définissez la configuration de votre salle de spectacle.</p>
+
+    <div class="error-msg" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+    <form (ngSubmit)="onCreate()">
+      <div class="form-group">
+        <label>Nom de la scène (ex: Salle des Fêtes)</label>
+        <input type="text" name="name" [(ngModel)]="scene.name" placeholder="Bamboo Forest" required>
+      </div>
+
+      <div class="row">
+        <div class="form-group col">
+          <label>Nombre de rangées</label>
+          <input type="number" name="maxRows" [(ngModel)]="scene.maxRows" min="1" required>
+        </div>
+        <div class="form-group col">
+          <label>Nombre de colonnes</label>
+          <input type="number" name="maxColumns" [(ngModel)]="scene.maxColumns" min="1" required>
+        </div>
+      </div>
+
+      <div class="info-box">
+        Capacité totale : {{ scene.maxRows * scene.maxColumns }} sièges
+      </div>
+
+      <button type="submit" class="btn-submit">Enregistrer la scène</button>
+    </form>
+
+    <a routerLink="/" class="back-link">← Annuler et retourner à l'accueil</a>
+  </div>
+</div>
