@@ -7,4 +7,5 @@ public class PriceZoneDto
     public decimal Price { get; set; }
     public string ColorHex { get; set; } = "#FFFFFF";
     public int SceneId { get; set; }
+    public List<SeatDto>? Seats { get; set; } = new();
 }

@@ -12,17 +12,18 @@ namespace MisterTicket.Server.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Stadia",
+                name: "Scenes",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Capacity = table.Column<int>(type: "int", nullable: false)
+                    MaxRows = table.Column<int>(type: "int", nullable: false),
+                    MaxColumns = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Stadia", x => x.Id);
+                    table.PrimaryKey("PK_Scenes", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -56,9 +57,9 @@ namespace MisterTicket.Server.Migrations
                 {
                     table.PrimaryKey("PK_Events", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Events_Stadia_SceneId",
+                        name: "FK_Events_Scenes_SceneId",
                         column: x => x.SceneId,
-                        principalTable: "Stadia",
+                        principalTable: "Scenes",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -78,9 +79,9 @@ namespace MisterTicket.Server.Migrations
                 {
                     table.PrimaryKey("PK_PriceZones", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_PriceZones_Stadia_SceneId",
+                        name: "FK_PriceZones_Scenes_SceneId",
                         column: x => x.SceneId,
-                        principalTable: "Stadia",
+                        principalTable: "Scenes",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -99,6 +100,12 @@ namespace MisterTicket.Server.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Reservations", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Reservations_Events_EventId",
+                        column: x => x.EventId,
+                        principalTable: "Events",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Reservations_Users_UserId",
                         column: x => x.UserId,
@@ -136,12 +143,13 @@ namespace MisterTicket.Server.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Number = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Row = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Price = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     ReservedByUserId = table.Column<int>(type: "int", nullable: true),
                     PriceZoneId = table.Column<int>(type: "int", nullable: false),
-                    ReservationId = table.Column<int>(type: "int", nullable: true),
-                    SceneId = table.Column<int>(type: "int", nullable: true)
+                    Row = table.Column<int>(type: "int", nullable: false),
+                    Column = table.Column<int>(type: "int", nullable: false),
+                    SceneId = table.Column<int>(type: "int", nullable: false),
+                    ReservationId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -150,16 +158,17 @@ namespace MisterTicket.Server.Migrations
                         name: "FK_Seats_PriceZones_PriceZoneId",
                         column: x => x.PriceZoneId,
                         principalTable: "PriceZones",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Seats_Reservations_ReservationId",
                         column: x => x.ReservationId,
                         principalTable: "Reservations",
                         principalColumn: "Id");
                     table.ForeignKey(
-                        name: "FK_Seats_Stadia_SceneId",
+                        name: "FK_Seats_Scenes_SceneId",
                         column: x => x.SceneId,
-                        principalTable: "Stadia",
+                        principalTable: "Scenes",
                         principalColumn: "Id");
                 });
 
@@ -171,6 +180,7 @@ namespace MisterTicket.Server.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     EventId = table.Column<int>(type: "int", nullable: false),
                     SeatId = table.Column<int>(type: "int", nullable: false),
+                    SeatId1 = table.Column<int>(type: "int", nullable: true),
                     Status = table.Column<int>(type: "int", nullable: false),
                     LockedUntil = table.Column<DateTime>(type: "datetime2", nullable: true),
                     ReservedByUserId = table.Column<int>(type: "int", nullable: true)
@@ -188,8 +198,12 @@ namespace MisterTicket.Server.Migrations
                         name: "FK_EventSeats_Seats_SeatId",
                         column: x => x.SeatId,
                         principalTable: "Seats",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_EventSeats_Seats_SeatId1",
+                        column: x => x.SeatId1,
+                        principalTable: "Seats",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateIndex(
@@ -198,15 +212,19 @@ namespace MisterTicket.Server.Migrations
                 column: "SceneId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_EventSeats_EventId_SeatId",
+                name: "IX_EventSeats_EventId",
                 table: "EventSeats",
-                columns: new[] { "EventId", "SeatId" },
-                unique: true);
+                column: "EventId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_EventSeats_SeatId",
                 table: "EventSeats",
                 column: "SeatId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_EventSeats_SeatId1",
+                table: "EventSeats",
+                column: "SeatId1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Payments_ReservationId",
@@ -217,6 +235,11 @@ namespace MisterTicket.Server.Migrations
                 name: "IX_PriceZones_SceneId",
                 table: "PriceZones",
                 column: "SceneId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Reservations_EventId",
+                table: "Reservations",
+                column: "EventId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Reservations_UserId",
@@ -249,9 +272,6 @@ namespace MisterTicket.Server.Migrations
                 name: "Payments");
 
             migrationBuilder.DropTable(
-                name: "Events");
-
-            migrationBuilder.DropTable(
                 name: "Seats");
 
             migrationBuilder.DropTable(
@@ -261,10 +281,13 @@ namespace MisterTicket.Server.Migrations
                 name: "Reservations");
 
             migrationBuilder.DropTable(
-                name: "Stadia");
+                name: "Events");
 
             migrationBuilder.DropTable(
                 name: "Users");
+
+            migrationBuilder.DropTable(
+                name: "Scenes");
         }
     }
 }

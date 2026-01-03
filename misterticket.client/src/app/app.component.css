@@ -1,14 +1,14 @@
-﻿:host {
-    max-width: 1280px;
-    padding: 2rem;
-    text-align: center;
+/* Supprime les marges par défaut et force le fond sombre sur toute la page */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background-color: #050b1a; /* Même bleu que ta home */
 }
 
-th, td {
-    padding-left: 1rem;
-    padding-right: 1rem;
-}
+/* Optionnel : Si tu veux une police plus élégante pour le style japonais */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&display=swap');
 
-table {
-    margin: 0 auto;
+body {
+  font-family: 'Noto Sans JP', sans-serif;
 }

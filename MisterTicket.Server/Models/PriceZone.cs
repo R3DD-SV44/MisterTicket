@@ -7,4 +7,5 @@ public class PriceZone
     public decimal Price { get; set; }
     public string ColorHex { get; set; } = "#FFFFFF";
     public int SceneId { get; set; }
+    public Scene Scene { get; set; }
 }

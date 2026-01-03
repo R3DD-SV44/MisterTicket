@@ -77,7 +77,7 @@ public class TicketsController : ControllerBase
                 page.Size(PageSizes.A6);
                 page.Margin(1, Unit.Centimetre);
                 page.PageColor(Colors.White);
-                page.DefaultTextStyle(x => x.FontSize(10).FontFamily(Fonts.Helvetica));
+                page.DefaultTextStyle(x => x.FontSize(10).FontFamily(Fonts.SegoeUI));
 
                 page.Header().Text("VOTRE BILLET ELECTRONIQUE")
                     .SemiBold().FontSize(14).FontColor(Colors.Blue.Medium).AlignCenter();

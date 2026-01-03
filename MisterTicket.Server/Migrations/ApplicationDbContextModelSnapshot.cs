@@ -71,15 +71,19 @@ namespace MisterTicket.Server.Migrations
                     b.Property<int>("SeatId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("SeatId1")
+                        .HasColumnType("int");
+
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("EventId");
+
                     b.HasIndex("SeatId");
 
-                    b.HasIndex("EventId", "SeatId")
-                        .IsUnique();
+                    b.HasIndex("SeatId1");
 
                     b.ToTable("EventSeats");
                 });
@@ -113,6 +117,36 @@ namespace MisterTicket.Server.Migrations
                     b.ToTable("Payments");
                 });
 
+            modelBuilder.Entity("MisterTicket.Server.Models.PriceZone", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ColorHex")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("Price")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("SceneId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SceneId");
+
+                    b.ToTable("PriceZones");
+                });
+
             modelBuilder.Entity("MisterTicket.Server.Models.Reservation", b =>
                 {
                     b.Property<int>("Id")
@@ -135,6 +169,8 @@ namespace MisterTicket.Server.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("EventId");
+
                     b.HasIndex("UserId");
 
                     b.ToTable("Reservations");
@@ -148,7 +184,10 @@ namespace MisterTicket.Server.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("Capacity")
+                    b.Property<int>("MaxColumns")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxRows")
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
@@ -157,7 +196,7 @@ namespace MisterTicket.Server.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Scene");
+                    b.ToTable("Scenes");
                 });
 
             modelBuilder.Entity("MisterTicket.Server.Models.Seat", b =>
@@ -167,6 +206,9 @@ namespace MisterTicket.Server.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Column")
+                        .HasColumnType("int");
 
                     b.Property<string>("Number")
                         .IsRequired()
@@ -185,11 +227,10 @@ namespace MisterTicket.Server.Migrations
                     b.Property<int?>("ReservedByUserId")
                         .HasColumnType("int");
 
-                    b.Property<string>("Row")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("Row")
+                        .HasColumnType("int");
 
-                    b.Property<int?>("SceneId")
+                    b.Property<int>("SceneId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -231,36 +272,6 @@ namespace MisterTicket.Server.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("PriceZone", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ColorHex")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("Price")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("SceneId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SceneId");
-
-                    b.ToTable("PriceZones");
-                });
-
             modelBuilder.Entity("MisterTicket.Server.Models.Event", b =>
                 {
                     b.HasOne("MisterTicket.Server.Models.Scene", "Scene")
@@ -280,11 +291,15 @@ namespace MisterTicket.Server.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("MisterTicket.Server.Models.Seat", "Seat")
+                    b.HasOne("MisterTicket.Server.Models.Seat", null)
                         .WithMany()
                         .HasForeignKey("SeatId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
+
+                    b.HasOne("MisterTicket.Server.Models.Seat", "Seat")
+                        .WithMany()
+                        .HasForeignKey("SeatId1");
 
                     b.Navigation("Event");
 
@@ -302,23 +317,42 @@ namespace MisterTicket.Server.Migrations
                     b.Navigation("Reservation");
                 });
 
+            modelBuilder.Entity("MisterTicket.Server.Models.PriceZone", b =>
+                {
+                    b.HasOne("MisterTicket.Server.Models.Scene", "Scene")
+                        .WithMany("PriceZones")
+                        .HasForeignKey("SceneId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Scene");
+                });
+
             modelBuilder.Entity("MisterTicket.Server.Models.Reservation", b =>
                 {
+                    b.HasOne("MisterTicket.Server.Models.Event", "Event")
+                        .WithMany()
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("MisterTicket.Server.Models.User", "User")
                         .WithMany("Reservations")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("Event");
+
                     b.Navigation("User");
                 });
 
             modelBuilder.Entity("MisterTicket.Server.Models.Seat", b =>
                 {
-                    b.HasOne("PriceZone", "PriceZone")
+                    b.HasOne("MisterTicket.Server.Models.PriceZone", "PriceZone")
                         .WithMany()
                         .HasForeignKey("PriceZoneId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("MisterTicket.Server.Models.Reservation", null)
@@ -327,18 +361,11 @@ namespace MisterTicket.Server.Migrations
 
                     b.HasOne("MisterTicket.Server.Models.Scene", null)
                         .WithMany("Seats")
-                        .HasForeignKey("SceneId");
+                        .HasForeignKey("SceneId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
 
                     b.Navigation("PriceZone");
-                });
-
-            modelBuilder.Entity("PriceZone", b =>
-                {
-                    b.HasOne("MisterTicket.Server.Models.Scene", null)
-                        .WithMany("PriceZones")
-                        .HasForeignKey("SceneId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("MisterTicket.Server.Models.Reservation", b =>

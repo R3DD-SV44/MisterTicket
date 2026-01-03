@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity.Data;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -70,5 +71,54 @@ public class AuthController : ControllerBase
         );
 
         return Ok(new { token = new JwtSecurityTokenHandler().WriteToken(token) });
+    }
+
+    [Authorize] // Nécessite d'être connecté
+    [HttpDelete("{id}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteUser(int id)
+    {
+        // 1. Récupération des informations de l'utilisateur actuel via les Claims
+        var currentUserIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var currentUserRole = User.FindFirstValue(ClaimTypes.Role);
+
+        if (string.IsNullOrEmpty(currentUserIdClaim) || !int.TryParse(currentUserIdClaim, out int currentUserId))
+        {
+            return Unauthorized(new { message = "Utilisateur non authentifié." });
+        }
+
+        // 2. Vérification de l'existence de l'utilisateur à supprimer
+        var userToDelete = await _context.Users.FindAsync(id);
+        if (userToDelete == null)
+        {
+            return NotFound(new { message = $"L'utilisateur avec l'ID {id} n'existe pas." });
+        }
+
+        // 3. Logique de sécurité : Seul l'Admin ou l'utilisateur lui-même peut supprimer
+        // Note : On compare le rôle en string car il est stocké ainsi dans le Claim
+        bool isAdmin = currentUserRole == UserRole.Admin.ToString();
+        bool isSelf = currentUserId == id;
+
+        if (!isAdmin && !isSelf)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = "Vous n'avez pas l'autorisation de supprimer ce compte." });
+        }
+
+        // 4. Suppression
+        _context.Users.Remove(userToDelete);
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            return BadRequest(new { message = "Erreur lors de la suppression de l'utilisateur (des données y sont peut-être liées)." });
+        }
+
+        return NoContent();
     }
 }

@@ -1,9 +1,38 @@
-<div style="padding: 20px;">
-  <h2>Bienvenue sur MisterTicket</h2>
-  <p>Sélectionnez une option :</p>
-  <ul>
-    <button routerLink="/events"> See Events </button>
-    <li><strong>Authentification :</strong> Connexion et rôles (via AuthController).</li>
-    <li><strong>Dashboard :</strong> Statistiques de vente (via DashboardController).</li>
-  </ul>
+<div class="night-theme">
+  <header class="hero">
+    <div class="stars"></div>
+    <div class="stars2"></div>
+    <div class="hero-content">
+      <h1 class="japanese-title">ミスターチケット</h1>
+      <h2 class="main-title">MisterTicket</h2>
+      <p class="subtitle">Réservez votre place sous les étoiles du spectacle.</p>
+      <div class="torii-divider"></div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="events-section">
+      <h3 class="section-label">Événements à l'affiche / 今後のイベント</h3>
+
+      <div *ngIf="loading" class="loader">
+        <div class="spinner"></div>
+      </div>
+
+      <div class="event-grid" *ngIf="!loading">
+        <div class="event-card" *ngFor="let event of events">
+          <div class="card-glass">
+            <div class="date-tag">{{ event.date | date:'dd MMM' }}</div>
+            <h4>{{ event.name }}</h4>
+            <p class="description">{{ event.description | slice:0:100 }}...</p>
+            <div class="card-footer">
+              <span class="location"><i class="bi bi-geo-alt"></i> {{ event.location }}</span>
+              <button [routerLink]="['/event', event.id]" class="btn-reserve">
+                Réserver
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
 </div>

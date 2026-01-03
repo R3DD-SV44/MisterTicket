@@ -9,44 +9,43 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<User> Users { get; set; }
     public DbSet<Event> Events { get; set; }
-    public DbSet<Scene> Scene { get; set; }
+    public DbSet<Scene> Scenes { get; set; } // Note : Tu as utilisé le singulier ici
     public DbSet<PriceZone> PriceZones { get; set; }
     public DbSet<Seat> Seats { get; set; }
     public DbSet<Reservation> Reservations { get; set; }
     public DbSet<Payment> Payments { get; set; }
     public DbSet<EventSeat> EventSeats { get; set; }
 
-    // Data/ApplicationDbContext.cs
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        // 1. Résoudre le conflit de cascade (Cycles ou multiple cascade paths)
-        // On désactive la suppression en cascade entre PriceZone et Seat
+        // 1. Scene -> PriceZone -> Seat (Le chemin de cascade que vous voulez)
         modelBuilder.Entity<Seat>()
             .HasOne(s => s.PriceZone)
-            .WithMany() // ou WithMany(pz => pz.Seats) si vous ajoutez la liste dans PriceZone
+            .WithMany()
             .HasForeignKey(s => s.PriceZoneId)
-            .OnDelete(DeleteBehavior.NoAction); // Changement ici : NoAction au lieu de Cascade
+            .OnDelete(DeleteBehavior.Cascade); // Cascade autorisé ici
 
-        // 2. Configurer la précision des types decimal (Supprime les avertissements de précision)
-        modelBuilder.Entity<PriceZone>()
-            .Property(p => p.Price)
-            .HasPrecision(18, 2);
-
+        // 2. Scene -> Seat (Lien direct)
+        // On met NoAction ici pour éviter l'erreur 1785. 
+        // Les sièges seront quand même supprimés via le chemin n°1.
         modelBuilder.Entity<Seat>()
-            .Property(s => s.Price)
-            .HasPrecision(18, 2);
+            .HasOne<Scene>()
+            .WithMany(sc => sc.Seats)
+            .HasForeignKey(s => s.SceneId)
+            .OnDelete(DeleteBehavior.NoAction); // Obligatoire pour SQL Server
 
-        modelBuilder.Entity<Payment>()
-            .Property(p => p.Value)
-            .HasPrecision(18, 2);
+        // 3. Précision pour les prix
+        modelBuilder.Entity<PriceZone>().Property(p => p.Price).HasPrecision(18, 2);
+        modelBuilder.Entity<Seat>().Property(s => s.Price).HasPrecision(18, 2);
+        modelBuilder.Entity<Payment>().Property(p => p.Value).HasPrecision(18, 2);
 
-        // 3. Contrainte d'unicité pour EventSeat (rappel)
+        // 4. Unicité EventSeat
         modelBuilder.Entity<EventSeat>()
-            .HasIndex(es => new { es.EventId, es.SeatId })
-            .IsUnique();
+         .HasOne<Seat>()
+         .WithMany()
+         .HasForeignKey(es => es.SeatId)
+         .OnDelete(DeleteBehavior.NoAction);
     }
-
 }

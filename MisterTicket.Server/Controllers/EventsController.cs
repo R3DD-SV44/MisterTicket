@@ -73,7 +73,7 @@ public class EventsController : ControllerBase
     [HttpPost("create")]
     public async Task<ActionResult<Event>> CreateEvent(EventDto dto)
     {
-        var sceneExists = await _context.Scene.AnyAsync(s => s.Id == dto.SceneId);
+        var sceneExists = await _context.Scenes.AnyAsync(s => s.Id == dto.SceneId);
 
         if (!sceneExists)
         {
@@ -111,7 +111,7 @@ public class EventsController : ControllerBase
 
         // 2. Vérification de l'existence de la scène
         // On utilise 'Scene' car c'est le nom dans votre ApplicationDbContext
-        var sceneExists = await _context.Scene.AnyAsync(s => s.Id == dto.SceneId);
+        var sceneExists = await _context.Scenes.AnyAsync(s => s.Id == dto.SceneId);
         if (!sceneExists)
         {
             return NotFound(new { message = $"Scene with ID {dto.SceneId} does not exist. Modification aborted." });
@@ -154,7 +154,7 @@ public class EventsController : ControllerBase
 
         // 2. Vérification de l'existence de la scène associée
         // On vérifie si la scène liée à cet événement existe toujours en base
-        var sceneExists = await _context.Scene.AnyAsync(s => s.Id == @event.SceneId);
+        var sceneExists = await _context.Scenes.AnyAsync(s => s.Id == @event.SceneId);
         if (!sceneExists)
         {
             return NotFound(new { message = $"The scene associated with this event (ID: {@event.SceneId}) does not exist." });
