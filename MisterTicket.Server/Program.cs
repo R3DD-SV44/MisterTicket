@@ -35,6 +35,8 @@ builder.Services.AddAuthorization(options => {
     options.AddPolicy("Admin", policy => policy.RequireRole("Admin"));
     options.AddPolicy("Organiser", policy => policy.RequireRole("Organiser"));
     options.AddPolicy("Customer", policy => policy.RequireRole("Customer"));
+    options.AddPolicy("Management", policy =>
+        policy.RequireRole("Admin", "Organiser"));
 });
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")

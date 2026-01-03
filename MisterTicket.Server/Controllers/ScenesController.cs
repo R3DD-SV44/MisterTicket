@@ -135,6 +135,22 @@ public class ScenesController : ControllerBase
         return NoContent();
     }
 
+    [HttpGet("{id}")]
+    [AllowAnonymous] // Permet de voir la scène sans être connecté
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<Scene>> GetSceneById(int id)
+    {
+        var scene = await _context.Scenes.FindAsync(id);
+
+        if (scene == null)
+        {
+            return NotFound(new { message = $"Scene with ID {id} not found." });
+        }
+
+        return Ok(scene);
+    }
+
     [HttpGet("{id}/layout")]
     [AllowAnonymous]
     [ProducesResponseType(StatusCodes.Status200OK)]

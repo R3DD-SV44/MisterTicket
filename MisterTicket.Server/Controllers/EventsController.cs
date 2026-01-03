@@ -69,7 +69,7 @@ public class EventsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status201Created)] // Succès
     [ProducesResponseType(StatusCodes.Status404NotFound)] // Scène introuvable
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [Authorize(Policy = "Organiser")]
+    [Authorize(Policy = "Management")]
     [HttpPost("create")]
     public async Task<ActionResult<Event>> CreateEvent(EventDto dto)
     {
@@ -95,7 +95,7 @@ public class EventsController : ControllerBase
     }
 
 
-    [Authorize(Policy = "Organiser")]
+    [Authorize(Policy = "Management")]
     [HttpPut("modify_{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)] // Succès (Pas de contenu à renvoyer)
     [ProducesResponseType(StatusCodes.Status404NotFound)] // Événement ou Scène introuvable
@@ -139,7 +139,7 @@ public class EventsController : ControllerBase
     }
 
 
-    [Authorize(Policy = "Organiser")]
+    [Authorize(Policy = "Management")]
     [HttpDelete("delete_{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)] // Succès
     [ProducesResponseType(StatusCodes.Status404NotFound)] // Événement ou Scène introuvable

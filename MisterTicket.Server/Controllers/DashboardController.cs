@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using MisterTicket.Server.Data;
 using MisterTicket.Server.Models;
 
-[Authorize(Policy = "Organiser")]
+[Authorize(Policy = "Management")]
 [Route("api/[controller]")]
 public class DashboardController : ControllerBase
 {

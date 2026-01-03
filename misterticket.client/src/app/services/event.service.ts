@@ -16,7 +16,7 @@ export interface Event {
   providedIn: 'root'
 })
 export class EventService {
-  private apiUrl = '/api/events'; // L'URL de votre EventsController
+  private apiUrl = '/api/Events/getAll'; // L'URL de votre EventsController
 
   constructor(private http: HttpClient) { }
 

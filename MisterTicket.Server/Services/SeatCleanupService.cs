@@ -19,46 +19,55 @@ namespace MisterTicket.Server.Services
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            await Task.Delay(10000, stoppingToken);
+
             while (!stoppingToken.IsCancellationRequested)
             {
-                using (var scope = _services.CreateScope())
+                try
                 {
-                    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
-                    var expiredEventSeats = await context.EventSeats
-                        .Where(es => es.Status == SeatStatus.ReservedTemp && es.LockedUntil < DateTime.UtcNow)
-                        .ToListAsync(stoppingToken);
-
-                    foreach (var eventSeat in expiredEventSeats)
+                    using (var scope = _services.CreateScope())
                     {
-                        var userId = eventSeat.ReservedByUserId;
+                        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-                        if (userId.HasValue)
+                        var expiredEventSeats = await context.EventSeats
+                            .Where(es => es.Status == SeatStatus.ReservedTemp && es.LockedUntil < DateTime.UtcNow)
+                            .ToListAsync(stoppingToken);
+
+                        foreach (var eventSeat in expiredEventSeats)
                         {
-                            var relatedRes = await context.Reservations
-                                .Include(r => r.SelectedSeats)
-                                .Where(r => r.UserId == userId.Value
-                                       && r.Status == ReservationStatus.OnGoing
-                                       && r.SelectedSeats.Any(s => s.Id == eventSeat.SeatId))
-                                .FirstOrDefaultAsync();
+                            var userId = eventSeat.ReservedByUserId;
 
-                            if (relatedRes != null)
+                            if (userId.HasValue)
                             {
-                                relatedRes.Status = ReservationStatus.Canceled;
+                                var relatedRes = await context.Reservations
+                                    .Include(r => r.SelectedSeats)
+                                    .Where(r => r.UserId == userId.Value
+                                           && r.Status == ReservationStatus.OnGoing
+                                           && r.SelectedSeats.Any(s => s.Id == eventSeat.SeatId))
+                                    .FirstOrDefaultAsync();
+
+                                if (relatedRes != null)
+                                {
+                                    relatedRes.Status = ReservationStatus.Canceled;
+                                }
                             }
+
+                            eventSeat.Status = SeatStatus.Free;
+                            eventSeat.LockedUntil = null;
+                            eventSeat.ReservedByUserId = null;
+
+                            await _hubContext.Clients.All.SendAsync("ReceiveSeatStatusUpdate", eventSeat.EventId, eventSeat.SeatId, SeatStatus.Free);
                         }
 
-                        eventSeat.Status = SeatStatus.Free;
-                        eventSeat.LockedUntil = null;
-                        eventSeat.ReservedByUserId = null;
-
-                        await _hubContext.Clients.All.SendAsync("ReceiveSeatStatusUpdate", eventSeat.EventId, eventSeat.SeatId, SeatStatus.Free);
+                        if (expiredEventSeats.Any())
+                        {
+                            await context.SaveChangesAsync();
+                        }
                     }
-
-                    if (expiredEventSeats.Any())
-                    {
-                        await context.SaveChangesAsync();
-                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Cleanup error: {ex.Message}");
                 }
                 await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
             }
