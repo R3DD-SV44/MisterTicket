@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { EventService } from '../../services/event.service';
 // Assure-toi que l'interface Event existe ou adapte selon ton DTO
-import { Event } from '../../models/event.model';
+// src/app/components/home/home.component.ts
+import { EventDto } from '../../models/event.model'; // Importez EventDto
 import { AuthService } from '../../services/auth.service';
 
 @Component({

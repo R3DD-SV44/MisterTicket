@@ -1,7 +1,9 @@
-export interface Event {
+// src/app/models/event.model.ts
+export interface EventDto {
   id: number;
   name: string;
   description: string;
-  date: string | Date; // En JSON, les dates arrivent souvent sous forme de chaînes de caractères
+  date: string;
   sceneId: number;
+  // Ajoute les autres champs si nécessaire
 }
