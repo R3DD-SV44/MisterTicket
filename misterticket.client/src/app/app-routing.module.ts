@@ -6,6 +6,7 @@ import { AuthenticationComponent } from './components/authentication/authenticat
 import { CreateSceneComponent } from './components/create-scene/create-scene.component';
 import { CreateEventComponent } from './components/create-event/create-event.component';
 import { RoleGuard } from './guards/role.guard';
+import { EditEventComponent } from './components/edit-event/edit-event.component';
 
 const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -22,6 +23,12 @@ const routes: Routes = [
     component: CreateEventComponent,
     canActivate: [RoleGuard],
     data: { expectedRole: 'Organiser' }
+  },
+  {
+    path: 'organiser/modify-event/:id',
+    component: EditEventComponent,
+    canActivate: [RoleGuard],
+    data: { roles: ['Admin', 'Organiser'] }
   },
   { path: '**', redirectTo: '' }
 ];

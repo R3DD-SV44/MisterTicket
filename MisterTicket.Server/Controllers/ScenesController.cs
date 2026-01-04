@@ -135,6 +135,23 @@ public class ScenesController : ControllerBase
         return NoContent();
     }
 
+    [HttpGet]
+    [AllowAnonymous] // Ou [Authorize] selon vos besoins de sécurité
+    public async Task<ActionResult<IEnumerable<SceneDto>>> GetScenes()
+    {
+        var scenes = await _context.Scenes
+            .Select(s => new SceneDto
+            {
+                Id = s.Id,
+                Name = s.Name,
+                MaxRows = s.MaxRows,
+                MaxColumns = s.MaxColumns
+            })
+            .ToListAsync();
+
+        return Ok(scenes);
+    }
+
     [HttpGet("{id}")]
     [AllowAnonymous] // Permet de voir la scène sans être connecté
     [ProducesResponseType(StatusCodes.Status200OK)]

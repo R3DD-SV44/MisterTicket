@@ -1,0 +1,33 @@
+/* Réutilisez les styles de create-event.component.css et ajoutez : */
+
+.actions-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.btn-delete {
+  background: transparent;
+  color: #ff4d4d;
+  border: 1px solid #ff4d4d;
+  padding: 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+  .btn-delete:hover {
+    background: rgba(255, 77, 77, 0.1);
+  }
+
+.error-banner {
+  background: rgba(255, 77, 77, 0.2);
+  color: #ff4d4d;
+  padding: 10px;
+  border-radius: 5px;
+  margin-top: 15px;
+  text-align: center;
+  border: 1px solid #ff4d4d;
+}

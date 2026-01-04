@@ -6,34 +6,33 @@
     <h2 class="auth-title">Nouvelle Scène / 新しいステージ</h2>
     <div class="torii-divider"></div>
 
-    <p class="subtitle-info">Définissez la configuration de votre salle de spectacle.</p>
+    <div *ngIf="errorMessage" class="error-banner">{{ errorMessage }}</div>
+    <div *ngIf="successMessage" class="success-banner">{{ successMessage }}</div>
 
-    <div class="error-msg" *ngIf="errorMessage">{{ errorMessage }}</div>
-
-    <form (ngSubmit)="onCreate()">
+    <form (ngSubmit)="onSubmit()" #sceneForm="ngForm">
       <div class="form-group">
-        <label>Nom de la scène (ex: Salle des Fêtes)</label>
-        <input type="text" name="name" [(ngModel)]="scene.name" placeholder="Bamboo Forest" required>
+        <label>Nom de la scène</label>
+        <input type="text" name="name" [(ngModel)]="scene.name"
+               placeholder="Ex: Grande Halle" required>
       </div>
 
-      <div class="row">
-        <div class="form-group col">
+      <div class="form-row">
+        <div class="form-group">
           <label>Nombre de rangées</label>
           <input type="number" name="maxRows" [(ngModel)]="scene.maxRows" min="1" required>
         </div>
-        <div class="form-group col">
-          <label>Nombre de colonnes</label>
+
+        <div class="form-group">
+          <label>Sièges par rangée</label>
           <input type="number" name="maxColumns" [(ngModel)]="scene.maxColumns" min="1" required>
         </div>
       </div>
 
-      <div class="info-box">
-        Capacité totale : {{ scene.maxRows * scene.maxColumns }} sièges
-      </div>
-
-      <button type="submit" class="btn-submit">Enregistrer la scène</button>
+      <button type="submit" class="btn-submit" [disabled]="!sceneForm.form.valid">
+        Générer la scène
+      </button>
     </form>
 
-    <a routerLink="/" class="back-link">← Annuler et retourner à l'accueil</a>
+    <a routerLink="/" class="back-link">← Annuler</a>
   </div>
 </div>

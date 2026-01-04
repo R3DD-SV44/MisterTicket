@@ -5,7 +5,9 @@
   <div class="auth-card">
     <h2 class="auth-title">Nouvel Événement / 新しいイベント</h2>
     <div class="torii-divider"></div>
-
+    <div *ngIf="errorMessage" class="error-message-banner">
+      {{ errorMessage }}
+    </div>
     <form (ngSubmit)="onCreate()" #eventForm="ngForm">
       <div class="form-group">
         <label>Nom de l'événement</label>

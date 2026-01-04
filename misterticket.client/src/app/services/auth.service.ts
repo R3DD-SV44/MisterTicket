@@ -16,13 +16,17 @@ export class AuthService {
     return this.http.post(`${this.apiUrl}/register`, userData);
   }
 
-  // Connexion
+  // src/app/services/auth.service.ts
+
   login(credentials: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/login`, credentials, { responseType: 'text' as 'json' })
+    // Retirez le responseType 'text' pour traiter la réponse comme un objet JSON standard
+    return this.http.post<any>(`${this.apiUrl}/login`, credentials)
       .pipe(
-        tap((token: any) => {
-          // On stocke le token JWT dans le navigateur
-          localStorage.setItem('token', token);
+        tap((response: any) => {
+          // On vérifie si la réponse contient une propriété 'token'
+          // Si c'est le cas, on n'enregistre que cette valeur
+          const tokenValue = response.token ? response.token : response;
+          localStorage.setItem('token', tokenValue);
         })
       );
   }

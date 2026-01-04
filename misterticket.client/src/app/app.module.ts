@@ -1,4 +1,4 @@
-import { HttpClientModule } from '@angular/common/http';
+import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { AppRoutingModule } from './app-routing.module';
@@ -9,6 +9,8 @@ import { AuthenticationComponent } from './components/authentication/authenticat
 import { FormsModule } from '@angular/forms';
 import { CreateSceneComponent } from './components/create-scene/create-scene.component';
 import { CreateEventComponent } from './components/create-event/create-event.component';
+import { JwtInterceptor } from './interceptors/jwt.interceptor';
+import { EditEventComponent } from './components/edit-event/edit-event.component';
 
 @NgModule({
   declarations: [
@@ -17,7 +19,8 @@ import { CreateEventComponent } from './components/create-event/create-event.com
     EventListComponent,
     AuthenticationComponent,
     CreateSceneComponent,
-    CreateEventComponent 
+    CreateEventComponent,
+    EditEventComponent 
   ],
   imports: [
     BrowserModule,
@@ -25,7 +28,7 @@ import { CreateEventComponent } from './components/create-event/create-event.com
     AppRoutingModule,
     FormsModule
   ],
-  providers: [],
+  providers: [{ provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true }],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

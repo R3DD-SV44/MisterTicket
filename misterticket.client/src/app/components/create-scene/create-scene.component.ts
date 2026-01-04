@@ -1,28 +1,25 @@
+// src/app/components/create-scene/create-scene.component.ts
 import { Component } from '@angular/core';
-import { Router } from '@angular/router';
 import { SceneService } from '../../services/scene.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-create-scene',
   templateUrl: './create-scene.component.html',
-  styleUrls: ['./create-scene.component.css']
+  styleUrls: ['./create-scene.component.css'] // Réutilisez le style auth-container/night-theme
 })
 export class CreateSceneComponent {
-  // Modèle correspondant au SceneDto du Backend
-  scene = {
-    name: '',
-    maxRows: 1,
-    maxColumns: 1
-  };
-
+  // Modèle basé sur SceneDto du backend
+  scene = { name: '', maxRows: 1, maxColumns: 1 };
   errorMessage = '';
+  successMessage = '';
 
-  constructor(
-    private sceneService: SceneService,
-    private router: Router
-  ) { }
+  constructor(private sceneService: SceneService, private router: Router) { }
 
-  onCreate() {
+  onSubmit() {
+    this.errorMessage = '';
+
+    // Validation simple
     if (this.scene.maxRows <= 0 || this.scene.maxColumns <= 0) {
       this.errorMessage = "Les dimensions doivent être supérieures à 0.";
       return;
@@ -30,12 +27,13 @@ export class CreateSceneComponent {
 
     this.sceneService.createScene(this.scene).subscribe({
       next: () => {
-        // Redirection vers la création d'événement une fois la scène prête
-        this.router.navigate(['/organiser/create-event']);
+        this.successMessage = "Scène créée avec succès ! Redirection...";
+        // Redirection après un court délai pour laisser l'utilisateur voir le message
+        setTimeout(() => this.router.navigate(['/organiser/create-event']), 1500);
       },
       error: (err) => {
-        this.errorMessage = "Erreur lors de la création de la scène. Le nom est peut-être déjà pris.";
-        console.error(err);
+        console.error("Erreur de création de scène", err);
+        this.errorMessage = err.error?.message || "Une erreur est survenue lors de la création.";
       }
     });
   }

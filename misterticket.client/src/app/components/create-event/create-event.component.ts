@@ -46,10 +46,15 @@ export class CreateEventComponent implements OnInit {
       return;
     }
 
+    this.loading = true;
+    this.errorMessage = '';
+
+
     this.eventService.createEvent(this.event).subscribe({
       next: () => this.router.navigate(['/']),
       error: (err) => {
         console.error("Erreur de création", err);
+        this.loading = false;
         this.errorMessage = "Une erreur est survenue lors de la création de l'événement.";
       }
     });

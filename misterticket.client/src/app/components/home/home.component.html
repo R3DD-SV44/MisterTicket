@@ -44,6 +44,11 @@
             <p class="description">{{ event.description | slice:0:100 }}...</p>
             <div class="card-footer">
               <span class="location"><i class="bi bi-geo-alt"></i> {{ event.location }}</span>
+              <div class="admin-actions" *ngIf="isAdmin || isOrganiser">
+                <button [routerLink]="['/organiser/modify-event', event.id]" class="btn-edit" title="Modifier l'événement">
+                  <i class="bi bi-pencil-square"></i> Modifier
+                </button>
+              </div>
               <button [routerLink]="['/event', event.id]" class="btn-reserve">
                 Réserver
               </button>
