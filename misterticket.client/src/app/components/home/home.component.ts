@@ -32,6 +32,7 @@ export class HomeComponent implements OnInit {
       const user = this.authService.getUserInfo();
       this.userName = user?.name || 'Utilisateur';
       this.isAdmin = this.authService.isAdmin();
+      this.isOrganiser = this.authService.isOrganiser();
     }
   }
 

@@ -9,6 +9,7 @@
     </ng-container>
 
     <div class="user-nav" *ngIf="isLoggedIn">
+      <span class="user-welcome">Bonjour, {{ userName }}</span>
       <ng-container *ngIf="isOrganiser">
         <button class="btn-auth outline" routerLink="/organiser/create-scene">+ Scène</button>
         <button class="btn-auth outline" routerLink="/organiser/create-event">+ Événement</button>

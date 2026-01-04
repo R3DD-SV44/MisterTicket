@@ -10,7 +10,7 @@ const PROXY_CONFIG = [
     ],
     target: "https://localhost:7229",
     secure: false,
-    ChangeOrigin: true,
+    changeOrigin: true,
     logLevel: "debug",
   }
 ];

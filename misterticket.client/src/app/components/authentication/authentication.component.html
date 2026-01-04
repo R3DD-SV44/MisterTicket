@@ -9,7 +9,7 @@
       <div class="error-msg" *ngIf="errorMessage">{{ errorMessage }}</div>
       <div class="form-group" *ngIf="!isLoginMode">
         <label>Nom complet</label>
-        <input type="text" name="fullName" [(ngModel)]="authData.fullName" placeholder="Yukari Yakumo" required>
+        <input type="text" name="name" [(ngModel)]="authData.name" placeholder="Yukari Yakumo" required>
       </div>
 
       <div class="form-group">

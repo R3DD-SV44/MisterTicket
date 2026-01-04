@@ -2,6 +2,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { SceneDto } from '../models/scene.model';
 
 @Injectable({ providedIn: 'root' })
 export class SceneService {
@@ -9,8 +10,8 @@ export class SceneService {
 
   constructor(private http: HttpClient) { }
 
-  getScenes(): Observable<any[]> {
-    return this.http.get<any[]>(this.apiUrl);
+  getScenes(): Observable<SceneDto[]> {
+    return this.http.get<SceneDto[]>(this.apiUrl);
   }
 
   createScene(scene: any): Observable<any> {

@@ -12,7 +12,7 @@ export class AuthenticationComponent implements OnInit {
   isLoginMode: boolean = true;
 
   authData = {
-    fullName: '',
+    name: '',
     email: '',
     password: ''
   };

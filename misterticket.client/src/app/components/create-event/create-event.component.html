@@ -1,4 +1,7 @@
-<div class="auth-container">
+<div class="night-theme auth-container">
+  <div class="stars"></div>
+  <div class="stars2"></div>
+
   <div class="auth-card">
     <h2 class="auth-title">Nouvel Événement / 新しいイベント</h2>
     <div class="torii-divider"></div>
@@ -7,7 +10,7 @@
       <div class="form-group">
         <label>Nom de l'événement</label>
         <input type="text" name="name" [(ngModel)]="event.name"
-               placeholder="Ex: Mokou vs Kaguya" required>
+               placeholder="Ex: Festival de Printemps" required>
       </div>
 
       <div class="form-group">
@@ -26,7 +29,7 @@
         <select name="sceneId" [(ngModel)]="event.sceneId" required>
           <option [value]="0" disabled selected>Choisir une scène...</option>
           <option *ngFor="let scene of scenes" [value]="scene.id">
-            {{ scene.name }} ({{ scene.maxRows }}x{{ scene.maxColumns }})
+            {{ scene.name }} ({{ scene.maxRows }}x{{ scene.maxColumns }} sièges)
           </option>
         </select>
       </div>
@@ -36,6 +39,6 @@
       </button>
     </form>
 
-    <a routerLink="/" class="back-link">← Annuler et revenir</a>
+    <a routerLink="/" class="back-link">← Annuler et revenir à l'accueil</a>
   </div>
 </div>
