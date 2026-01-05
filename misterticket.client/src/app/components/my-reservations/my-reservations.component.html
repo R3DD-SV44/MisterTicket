@@ -1,0 +1,52 @@
+<div class="auth-container">
+  <div class="stars"></div>
+  <div class="glass-panel" style="max-width: 900px;">
+    <h2>Mes Réservations</h2>
+    <p class="info-text">Retrouvez ici l'historique de vos commandes.</p>
+
+    <div *ngIf="isLoading" class="loader-container">
+      Chargement...
+    </div>
+
+    <div *ngIf="!isLoading && reservations.length === 0">
+      <p>Aucune réservation trouvée.</p>
+      <button class="btn-action btn-pay" routerLink="/events">Voir les événements</button>
+    </div>
+
+    <div *ngIf="!isLoading && reservations.length > 0" class="reservations-list">
+      <div *ngFor="let res of reservations" class="reservation-card-item">
+
+        <div class="res-header">
+          <h3>{{ res.event?.name }}</h3>
+          <span class="status-badge" [ngClass]="{'paid': res.status === 2, 'pending': res.status === 1, 'canceled': res.status === 3}">
+            {{ getStatusLabel(res.status) }}
+          </span>
+        </div>
+
+        <div class="res-details">
+          <p><i class="bi bi-calendar"></i> {{ res.event?.date | date:'dd/MM/yyyy HH:mm' }}</p>
+          <p><i class="bi bi-ticket-perforated"></i> {{ res.selectedSeats?.length }} place(s)</p>
+          <p class="price-tag">
+            {{ res.selectedSeats | json | slice:0:0 }} Total : <strong>{{ res.selectedSeats?.length > 0 ? (res.selectedSeats[0].price * res.selectedSeats.length) : 0 }}€</strong>
+          </p>
+        </div>
+
+        <div class="res-actions">
+          <ng-container *ngIf="res.status === 2">
+            <button class="btn-sm btn-download" (click)="downloadTicket(res.id, 'pdf')">PDF</button>
+            <button class="btn-sm btn-download" (click)="downloadTicket(res.id, 'qrcode')">QR</button>
+          </ng-container>
+
+          <ng-container *ngIf="res.status === 1">
+            <button class="btn-sm btn-pay-now" (click)="goToPayment(res.id)">Payer maintenant</button>
+          </ng-container>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="mt-4">
+      <a routerLink="/" class="back-link">Retour à l'accueil</a>
+    </div>
+  </div>
+</div>

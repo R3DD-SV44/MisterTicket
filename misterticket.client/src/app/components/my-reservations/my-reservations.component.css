@@ -1,0 +1,107 @@
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px;
+  background: radial-gradient(circle at center, #1b2735 0%, #090a0f 100%);
+}
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 30px;
+  width: 100%;
+  color: white;
+}
+
+.reservation-card-item {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.res-header h3 {
+  margin: 0;
+  color: #8da9c4;
+  font-size: 1.2rem;
+}
+
+.status-badge {
+  font-size: 0.8rem;
+  padding: 4px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+  .status-badge.paid {
+    background-color: rgba(40, 167, 69, 0.2);
+    color: #28a745;
+  }
+
+  .status-badge.pending {
+    background-color: rgba(255, 193, 7, 0.2);
+    color: #ffc107;
+  }
+
+  .status-badge.canceled {
+    background-color: rgba(220, 53, 69, 0.2);
+    color: #dc3545;
+  }
+
+.res-details {
+  display: flex;
+  gap: 20px;
+  font-size: 0.9rem;
+  color: #ccc;
+}
+
+.res-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-sm {
+  padding: 8px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.btn-download {
+  background: #8da9c4;
+  color: #090a0f;
+}
+
+  .btn-download:hover {
+    background: #fff;
+  }
+
+.btn-pay-now {
+  background: #28a745;
+  color: white;
+}
+
+  .btn-pay-now:hover {
+    background: #218838;
+  }
+
+.back-link {
+  color: #8da9c4;
+  text-decoration: none;
+}
+
+  .back-link:hover {
+    color: white;
+  }

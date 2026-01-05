@@ -1,0 +1,39 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <h2 class="auth-title">
+      {{ isLoginMode ? 'Connexion / ログイン' : 'Inscription / 登録' }}
+    </h2>
+    <div class="torii-divider"></div>
+
+    <form class="auth-form" (ngSubmit)="onSubmit()">
+      <div class="error-msg" *ngIf="errorMessage">{{ errorMessage }}</div>
+      <div class="form-group" *ngIf="!isLoginMode">
+        <label>Nom complet</label>
+        <input type="text" name="name" [(ngModel)]="authData.name" placeholder="Yukari Yakumo" required>
+      </div>
+
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" name="email" [(ngModel)]="authData.email" placeholder="votre@email.com" required>
+      </div>
+
+      <div class="form-group">
+        <label>Mot de passe</label>
+        <input type="password" name="password" [(ngModel)]="authData.password" placeholder="••••••••" required>
+      </div>
+
+      <button type="submit" class="btn-submit">
+        {{ isLoginMode ? 'Se connecter' : "S'inscrire" }}
+      </button>
+    </form>
+
+    <p class="toggle-text">
+      {{ isLoginMode ? "Pas encore de compte ?" : "Déjà inscrit ?" }}
+      <span (click)="toggleMode()">
+        {{ isLoginMode ? "Créer un compte" : "Se connecter" }}
+      </span>
+    </p>
+
+    <a routerLink="/" class="back-link">← Retour à l'accueil</a>
+  </div>
+</div>

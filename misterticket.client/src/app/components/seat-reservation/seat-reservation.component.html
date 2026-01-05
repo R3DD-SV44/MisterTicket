@@ -1,0 +1,66 @@
+<div class="night-theme auth-container">
+  <div class="stars"></div>
+  <div class="stars2"></div>
+
+  <div class="reservation-card glass-panel">
+    <div *ngIf="loading" class="loader-container">
+      <div class="spinner"></div>
+      <p>Chargement...</p>
+    </div>
+
+    <div *ngIf="!loading && event">
+      <h2 class="auth-title">{{ event.name }}</h2>
+      <p class="event-subtitle">{{ event.date | date:'dd/MM/yyyy HH:mm' }} - {{ scene?.name }}</p>
+
+      <div class="torii-divider"></div>
+
+      <section class="booking-section">
+        <h3>Choisissez votre place</h3>
+        <p class="help-text">Cliquez sur un siège coloré pour le sélectionner.</p>
+
+        <div class="grid-scroll-container">
+          <div class="seat-grid">
+            <div class="grid-row" *ngFor="let row of seatGrid; let r = index">
+              <div *ngFor="let seat of row; let c = index"
+                   class="seat-cell reservation-mode"
+                   [class.status-reserved-temp]="seat && getSeatStatus(seat.id) === 'ReservedTemp'"
+                   [class.status-paid]="seat && getSeatStatus(seat.id) === 'Paid'"
+                   [class.is-available]="seat?.priceZoneId && !isOccupied(seat)"
+                   [class.is-selected]="isSelected(seat)"
+                   [class.is-occupied]="isOccupied(seat)"
+                   [style.background-color]="isOccupied(seat) ? '' : getZoneColor(seat?.priceZoneId)"
+                   (click)="selectSeat(r, c)">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        
+
+        <div class="zone-legend">
+          <div *ngFor="let zone of priceZones" class="legend-item">
+            <span class="color-dot" [style.background-color]="zone.colorHex"></span>
+            <span>{{ zone.name }} ({{ zone.price }}€)</span>
+          </div>
+        </div>
+      </section>
+
+      <div class="actions-row">
+        <div class="selection-info">
+          <span *ngIf="selectedSeats.length > 0">
+            {{ selectedSeats.length }} siège(s) sélectionné(s) — <strong>{{ getTotalPrice() }}€</strong>
+          </span>
+          <span *ngIf="selectedSeats.length === 0">Choisissez vos places</span>
+        </div>
+        <button class="btn-submit"
+                [disabled]="selectedSeats.length === 0"
+                (click)="onReserve()">
+          Réserver {{ selectedSeats.length > 0 ? '(' + selectedSeats.length + ')' : '' }}
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="errorMessage" class="error-banner">{{ errorMessage }}</div>
+    <a routerLink="/" class="back-link">Retour à l'accueil</a>
+  </div>
+</div>

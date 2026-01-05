@@ -1,0 +1,70 @@
+<div class="night-theme auth-container">
+  <div class="stars"></div>
+  <div class="stars2"></div>
+
+  <div class="auth-card">
+    <h2 class="auth-title">Modifier l'Événement / 編集</h2>
+    <div class="torii-divider"></div>
+
+    <div *ngIf="loading" class="loader-container">
+      <div class="spinner"></div>
+      <p>Chargement des détails...</p>
+    </div>
+
+    <form *ngIf="!loading" (ngSubmit)="onUpdate()" #editForm="ngForm">
+
+      <div *ngIf="errorMessage" class="error-message-banner">
+        {{ errorMessage }}
+      </div>
+
+      <div class="form-group">
+        <label>Image de l'événement</label>
+        <div class="image-upload-wrapper">
+          <div class="image-preview" *ngIf="imagePreview">
+            <img [src]="imagePreview" alt="Aperçu de l'événement">
+          </div>
+          <input type="file" (change)="onFileSelected($event)" accept="image/*" class="file-input">
+          <small class="help-text">Laissez vide pour conserver l'image actuelle.</small>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Nom de l'événement</label>
+        <input type="text" name="name" [(ngModel)]="event.name"
+               placeholder="Ex: Festival de Printemps" required>
+      </div>
+
+      <div class="form-group">
+        <label>Description</label>
+        <textarea name="description" [(ngModel)]="event.description"
+                  rows="3" placeholder="Détails du spectacle..." required></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Date et Heure</label>
+        <input type="datetime-local" name="date" [(ngModel)]="event.date" required>
+      </div>
+
+      <div class="form-group">
+        <label>Lieu / Scène</label>
+        <select name="sceneId" [(ngModel)]="event.sceneId" required>
+          <option *ngFor="let scene of scenes" [value]="scene.id">
+            {{ scene.name }} ({{ scene.maxRows }}x{{ scene.maxColumns }} sièges)
+          </option>
+        </select>
+      </div>
+
+      <div class="actions-row">
+        <button type="submit" class="btn-submit" [disabled]="!editForm.form.valid">
+          Sauvegarder les modifications
+        </button>
+
+        <button type="button" class="btn-delete" (click)="onDelete()">
+          <i class="bi bi-trash"></i> Supprimer l'événement
+        </button>
+      </div>
+    </form>
+
+    <a routerLink="/" class="back-link">← Annuler et retourner à l'accueil</a>
+  </div>
+</div>

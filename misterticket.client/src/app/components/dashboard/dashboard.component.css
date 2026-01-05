@@ -1,0 +1,203 @@
+:host {
+  display: block;
+  font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
+}
+
+.night-theme {
+  min-height: 100vh;
+  background: radial-gradient(circle at top center, #1b2735 0%, #090a0f 100%);
+  color: #f0f0f0;
+  position: relative;
+  overflow: hidden;
+  padding-bottom: 50px;
+}
+
+.stars,
+.stars2 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('https://www.transparenttextures.com/patterns/stardust.png');
+  opacity: 0.4;
+  animation: twinkle 200s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes twinkle {
+  from {
+    background-position: 0 0;
+  }
+
+  to {
+    background-position: 1000px 1000px;
+  }
+}
+
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  position: relative;
+  z-index: 10;
+}
+
+.page-header {
+  text-align: center;
+  margin-bottom: 60px;
+  position: relative;
+  padding-top: 20px;
+}
+
+.btn-back {
+  position: absolute;
+  left: 0;
+  top: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #a0a0a0;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  z-index: 20;
+}
+
+  .btn-back:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+  }
+
+.main-title {
+  font-size: 3rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  margin: 0;
+  background: linear-gradient(to bottom, #ffffff, #8da9c4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+}
+
+.torii-divider {
+  width: 80px;
+  height: 4px;
+  background: #ff4d4d;
+  margin: 15px auto;
+  border-radius: 2px;
+  box-shadow: 0 0 15px rgba(255, 77, 77, 0.4);
+}
+
+.event-subtitle {
+  font-size: 1.2rem;
+  color: #ffcc00;
+  margin-top: 10px;
+  font-weight: 500;
+  letter-spacing: 1px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 25px;
+}
+
+.stat-card {
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  padding: 25px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  transition: all 0.4s ease;
+}
+
+  .stat-card:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  }
+
+.icon-circle {
+  width: 50px;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: #e0e0e0;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.3s;
+}
+
+.stat-card:hover .icon-circle {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.label {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 700;
+  margin-bottom: 5px;
+  color: #d32f2f;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.value {
+  font-size: 1.8rem;
+  font-weight: 300;
+  color: white;
+  letter-spacing: 1px;
+}
+
+.progress-track {
+  height: 2px;
+  background: rgba(255, 255, 255, 0.1);
+  margin-top: 10px;
+  width: 100%;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #d32f2f;
+  box-shadow: 0 0 10px rgba(211, 47, 47, 0.5);
+}
+
+.loader-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 50px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-top-color: #d32f2f;
+  border-radius: 50%;
+  animation: spin 1s infinite linear;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

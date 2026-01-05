@@ -1,0 +1,80 @@
+<div class="night-theme">
+  <div class="stars"></div>
+  <div class="stars2"></div>
+
+  <div class="container">
+
+    <header class="page-header">
+      <button class="btn-back" (click)="goBack()">
+        <i class="bi bi-arrow-left"></i> Retour
+      </button>
+
+      <div class="header-content">
+        <h1 class="main-title">TABLEAU DE BORD</h1>
+        <div class="torii-divider"></div>
+        <p class="event-subtitle">{{ eventName }}</p>
+      </div>
+    </header>
+
+    <div *ngIf="isLoading" class="loader-container">
+      <div class="spinner"></div>
+    </div>
+
+    <div class="stats-grid" *ngIf="!isLoading && stats">
+
+      <div class="stat-card">
+        <div class="icon-circle">
+          <i class="bi bi-currency-euro"></i>
+        </div>
+        <div class="meta">
+          <span class="label">Revenu Total</span>
+          <span class="value">{{ stats.revenue | number:'1.2-2' }} €</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="icon-circle">
+          <i class="bi bi-pie-chart"></i>
+        </div>
+        <div class="meta">
+          <span class="label">Remplissage</span>
+          <span class="value">{{ stats.fillingRate }} %</span>
+          <div class="progress-track">
+            <div class="progress-fill" [style.width.%]="stats.fillingRate"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="icon-circle">
+          <i class="bi bi-check-lg"></i>
+        </div>
+        <div class="meta">
+          <span class="label">Confirmés</span>
+          <span class="value">{{ stats.paid }}</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="icon-circle">
+          <i class="bi bi-hourglass-split"></i>
+        </div>
+        <div class="meta">
+          <span class="label">En réservation</span>
+          <span class="value">{{ stats.reserved }}</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="icon-circle">
+          <i class="bi bi-ticket-perforated"></i>
+        </div>
+        <div class="meta">
+          <span class="label">Disponibles</span>
+          <span class="value">{{ stats.free }}</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

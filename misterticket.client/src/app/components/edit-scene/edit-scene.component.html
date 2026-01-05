@@ -1,0 +1,98 @@
+<div class="night-theme auth-container">
+  <div class="stars"></div>
+  <div class="stars2"></div>
+
+  <div class="edit-card glass-panel">
+    <h2 class="auth-title">Configuration de la Salle / 会場設定</h2>
+    <div class="torii-divider"></div>
+
+    <div *ngIf="loading" class="loader-container">
+      <div class="spinner"></div>
+      <p>Traitement en cours...</p>
+    </div>
+
+    <div *ngIf="!loading">
+      <section class="config-section">
+        <h3>1. Informations générales</h3>
+        <div class="form-group">
+          <label>Nom de la salle</label>
+          <input type="text" [(ngModel)]="scene.name" placeholder="Ex: Grand Hall">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nombre de lignes</label>
+            <input type="number" [(ngModel)]="scene.maxRows" (ngModelChange)="onGridSizeChange()" min="1" max="50">
+          </div>
+          <div class="form-group">
+            <label>Nombre de colonnes</label>
+            <input type="number" [(ngModel)]="scene.maxColumns" (ngModelChange)="onGridSizeChange()" min="1" max="50">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Image de présentation</label>
+          <div class="image-upload-area">
+            <div class="preview-box" *ngIf="imagePreview">
+              <img [src]="imagePreview" alt="Aperçu">
+            </div>
+            <input type="file" (change)="onFileSelected($event)" accept="image/*">
+          </div>
+        </div>
+      </section>
+
+      <section class="config-section">
+        <h3>2. Zones de Prix</h3>
+
+        <div class="new-zone-form glass-panel">
+          <h4>Ajouter une zone</h4>
+          <div class="form-row">
+            <input type="text" [(ngModel)]="newZone.name" placeholder="Nom (ex: VIP)">
+            <input type="number" [(ngModel)]="newZone.price" placeholder="Prix (€)">
+            <input type="color" [(ngModel)]="newZone.colorHex" title="Choisir une couleur">
+            <button class="btn-add-zone" (click)="onCreateZone()">+</button>
+          </div>
+        </div>
+
+        <p class="help-text">Sélectionnez une zone pour l'appliquer aux sièges :</p>
+        <div class="zone-picker">
+          <div class="zone-item eraser"
+               [class.selected]="selectedPriceZoneId === null"
+               (click)="selectedPriceZoneId = null">
+            <span class="color-dot eraser-dot"><i class="bi bi-eraser-fill"></i></span>
+            <span class="zone-info">Effacer la zone</span>
+          </div>
+          <div *ngFor="let zone of priceZones"
+               class="zone-item"
+               [class.selected]="selectedPriceZoneId === zone.id"
+               (click)="selectedPriceZoneId = zone.id">
+            <span class="color-dot" [style.background-color]="zone.colorHex"></span>
+            <span class="zone-info">{{ zone.name }} ({{ zone.price }}€)</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="config-section">
+        <h3>3. Plan de salle ({{scene.maxRows}}x{{scene.maxColumns}})</h3>
+        <div class="grid-scroll-container">
+          <div class="seat-grid">
+            <div class="grid-row" *ngFor="let row of seatGrid; let r = index">
+              <div *ngFor="let seat of row; let c = index"
+                   class="seat-cell"
+                   [style.background-color]="getZoneColor(seat?.priceZoneId)"
+                   (click)="applyPriceZone(r, c)"
+                   [title]="'Rang ' + (r+1) + ', Col ' + (c+1)">
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="actions-row">
+        <button class="btn-submit" (click)="onSave()">Sauvegarder tout</button>
+        <button class="btn-delete" (click)="onDelete()">Supprimer la salle</button>
+        <a routerLink="/" class="back-link">Annuler</a>
+      </div>
+    </div>
+
+    <div *ngIf="errorMessage" class="error-banner">{{ errorMessage }}</div>
+  </div>
+</div>

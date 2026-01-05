@@ -1,0 +1,52 @@
+<div class="night-theme auth-container">
+  <div class="stars"></div>
+  <div class="stars2"></div>
+
+  <div class="auth-card">
+    <h2 class="auth-title">Nouvel Événement / 新しいイベント</h2>
+    <div class="torii-divider"></div>
+    <div *ngIf="errorMessage" class="error-message-banner">
+      {{ errorMessage }}
+    </div>
+    <form (ngSubmit)="onCreate()" #eventForm="ngForm">
+
+      <div class="form-group">
+        <label>Image de l'événement</label>
+        <input type="file" (change)="onFileSelected($event)" accept="image/*" class="file-input">
+      </div>
+
+      <div class="form-group">
+        <label>Nom de l'événement</label>
+        <input type="text" name="name" [(ngModel)]="event.name"
+               placeholder="Ex: Festival de Printemps" required>
+      </div>
+
+      <div class="form-group">
+        <label>Description</label>
+        <textarea name="description" [(ngModel)]="event.description"
+                  placeholder="Détails du spectacle..." rows="3" required></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Date et Heure</label>
+        <input type="datetime-local" name="date" [(ngModel)]="event.date" required>
+      </div>
+
+      <div class="form-group">
+        <label>Lieu / Scène</label>
+        <select name="sceneId" [(ngModel)]="event.sceneId" required>
+          <option [value]="0" disabled selected>Choisir une scène...</option>
+          <option *ngFor="let scene of scenes" [value]="scene.id">
+            {{ scene.name }} ({{ scene.maxRows }}x{{ scene.maxColumns }} sièges)
+          </option>
+        </select>
+      </div>
+
+      <button type="submit" class="btn-submit" [disabled]="!eventForm.form.valid">
+        Créer l'événement
+      </button>
+    </form>
+
+    <a routerLink="/" class="back-link">← Annuler et revenir à l'accueil</a>
+  </div>
+</div>

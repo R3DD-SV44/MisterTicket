@@ -1,0 +1,86 @@
+<div class="auth-container">
+  <div class="stars"></div>
+  <div class="stars2"></div>
+
+  <div class="glass-panel">
+
+    <div *ngIf="isLoading">
+      <div class="loader"></div>
+      <p class="info-text">Chargement de la commande...</p>
+    </div>
+
+    <div *ngIf="!isLoading && reservation">
+
+      <div *ngIf="!isPaid">
+        <h2>Paiement Sécurisé</h2>
+        <p class="info-text">
+          Vous réservez pour : <br>
+          <strong style="color:white">{{ reservation.event?.name }}</strong>
+        </p>
+
+        <div class="total-amount">{{ calculateTotal() }}€</div>
+
+        <div class="card-simulation-box">
+          <div class="form-group full-width">
+            <label>Numéro de carte</label>
+            <div class="input-icon-wrapper">
+              <i class="bi bi-credit-card-2-front"></i>
+              <input type="text" [(ngModel)]="cardNumber" placeholder="0000 0000 0000 0000" class="fake-input" maxlength="19">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Expiration</label>
+              <input type="text" [(ngModel)]="expiryDate" placeholder="MM/YY" class="fake-input" maxlength="5">
+            </div>
+            <div class="form-group">
+              <label>CVV</label>
+              <div class="input-icon-wrapper">
+                <i class="bi bi-lock"></i>
+                <input type="password" [(ngModel)]="cvv" placeholder="123" class="fake-input" maxlength="3">
+              </div>
+            </div>
+          </div>
+
+          <p class="simulation-note">
+            <i class="bi bi-info-circle"></i> Mode Simulation : Aucune transaction réelle ne sera effectuée.
+          </p>
+        </div>
+        <button class="btn-action btn-pay" (click)="processPayment()" [disabled]="paymentProcessing">
+          <span *ngIf="!paymentProcessing"><i class="bi bi-credit-card"></i> Payer maintenant</span>
+          <span *ngIf="paymentProcessing">Traitement bancaire...</span>
+        </button>
+
+        <button class="btn-action btn-cancel" (click)="cancelPayment()" [disabled]="paymentProcessing">
+          Annuler la commande
+        </button>
+      </div>
+
+      <div *ngIf="isPaid">
+        <div class="success-icon">
+          <i class="bi bi-check-circle-fill"></i>
+        </div>
+        <h2>Paiement Accepté !</h2>
+        <p class="info-text">Merci pour votre commande. Vos sièges sont maintenant réservés définitivement.</p>
+
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 20px;">
+          <button class="btn-action btn-download" (click)="download('pdf')">
+            <i class="bi bi-file-pdf"></i> Billet PDF
+          </button>
+          <button class="btn-action btn-download" (click)="download('qrcode')">
+            <i class="bi bi-qr-code"></i> QR Code
+          </button>
+          <button class="btn-action btn-download" (click)="download('zip')">
+            <i class="bi bi-archive"></i> Pack Complet (.ZIP)
+          </button>
+        </div>
+
+        <button class="btn-action btn-cancel" style="margin-top: 20px;" routerLink="/">
+          Retour à l'accueil
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>

@@ -1,0 +1,54 @@
+<div class="night-theme auth-container">
+  <div class="stars"></div>
+  <div class="stars2"></div>
+
+  <div class="auth-card">
+    <h2 class="auth-title">Nouvelle Salle / 新しい会場</h2>
+    <div class="torii-divider"></div>
+
+    <div *ngIf="errorMessage" class="error-banner">{{ errorMessage }}</div>
+
+    <section class="config-section">
+      <h3>1. Informations générales</h3>
+      <div class="form-group">
+        <label>Nom de la salle</label>
+        <input type="text" [(ngModel)]="scene.name" placeholder="Ex: Grand Hall">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nombre de lignes</label>
+          <input type="number" [(ngModel)]="scene.maxRows" (ngModelChange)="onGridSizeChange()" min="1" max="50">
+        </div>
+        <div class="form-group">
+          <label>Nombre de colonnes</label>
+          <input type="number" [(ngModel)]="scene.maxColumns" (ngModelChange)="onGridSizeChange()" min="1" max="50">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Image de présentation</label>
+        <div class="image-upload-area">
+          <div class="preview-box" *ngIf="imagePreview">
+            <img [src]="imagePreview" alt="Aperçu">
+          </div>
+          <input type="file" (change)="onFileSelected($event)" accept="image/*">
+        </div>
+      </div>
+    </section>
+
+    <section class="config-section">
+      <h3>2. Aperçu du Plan ({{scene.maxRows}}x{{scene.maxColumns}})</h3>
+      <div class="grid-scroll-container">
+        <div class="seat-grid">
+          <div class="grid-row" *ngFor="let row of seatGrid">
+            <div *ngFor="let seat of row" class="seat-cell"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="actions-row">
+      <button class="btn-submit" (click)="onSubmit()" [disabled]="!scene.name">Créer la salle</button>
+      <a routerLink="/" class="back-link">Annuler</a>
+    </div>
+  </div>
+</div>

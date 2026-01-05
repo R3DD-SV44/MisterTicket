@@ -1,0 +1,109 @@
+<div class="night-theme">
+  <div class="stars"></div>
+  <div class="stars2"></div>
+  <nav class="auth-buttons">
+
+    <ng-container *ngIf="!isLoggedIn">
+      <button class="btn-auth outline" routerLink="/auth/register">S'inscrire</button>
+      <button class="btn-auth solid" routerLink="/auth/login">S'authentifier</button>
+    </ng-container>
+
+    <div class="user-nav" *ngIf="isLoggedIn">
+      <a routerLink="/my-reservations" class="user-welcome-link" title="Voir mes réservations">
+        Bonjour, {{ userName }}
+      </a>
+      <ng-container *ngIf="isOrganiser">
+        <button class="btn-auth outline" routerLink="/organiser/create-scene">+ Scène</button>
+        <button class="btn-auth outline" routerLink="/organiser/create-event">+ Événement</button>
+      </ng-container>
+
+      <button *ngIf="isAdmin" class="btn-auth admin" routerLink="/admin">Contrôle Admin</button>
+      <button class="btn-auth outline" (click)="onLogout()">Déconnexion</button>
+    </div>
+
+  </nav>
+  <header class="hero">
+    <div class="hero-content">
+      <h1 class="japanese-title">ミスターチケット</h1>
+      <h2 class="main-title">MisterTicket</h2>
+      <div class="torii-divider"></div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="events-section">
+      <h3 class="section-label">Événements à l'affiche / 今後のイベント</h3>
+
+      <div *ngIf="loading" class="loader">
+        <div class="spinner"></div>
+      </div>
+
+      <div class="event-grid" *ngIf="!loading">
+        <div class="event-card" *ngFor="let event of events">
+          <div class="card-glass">
+            <div class="card-header-image" *ngIf="event.imageUrl">
+              <img [src]="event.imageUrl" [alt]="event.name" class="event-img">
+            </div>
+            <div class="date-tag">{{ event.date | date:'dd MMM' }}</div>
+            <h4>{{ event.name }}</h4>
+            <p class="description">{{ event.description | slice:0:100 }}...</p>
+            <div class="card-footer">
+              <span class="location"><i class="bi bi-geo-alt"></i> {{ event.sceneName }}</span>
+              <div class="admin-actions" *ngIf="isAdmin || isOrganiser">
+                <button [routerLink]="['/organiser/modify-event', event.id]" class="btn-edit" title="Modifier l'événement">
+                  <i class="bi bi-pencil-square"></i> Modifier
+                </button>
+                <button [routerLink]="['/organiser/event', event.id, 'dashboard']" class="btn-edit" title="Voir les stats" style="margin-left: 5px;">
+                  <i class="bi bi-graph-up"></i> Stats
+                </button>
+              </div>
+              <div class="event-card">
+                <button [routerLink]="['/event', event.id, 'reserve']" class="btn-reserve">
+                  Réserver
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="events-section scenes-section">
+      <h3 class="section-label">Nos Salles de Spectacle / 会場</h3>
+
+      <div *ngIf="loadingScenes" class="loader">
+        <div class="spinner"></div>
+      </div>
+
+      <div class="event-grid" *ngIf="!loadingScenes">
+        <div class="event-card scene-card" *ngFor="let scene of scenes">
+          <div class="card-glass">
+            <div class="card-header-image" *ngIf="scene.imageUrl">
+              <img [src]="scene.imageUrl" [alt]="scene.name" class="event-img">
+            </div>
+            <div class="card-header-icon" *ngIf="!scene.imageUrl">
+              <i class="bi bi-building"></i>
+            </div>
+
+            <h4>{{ scene.name }}</h4>
+            <p class="description">
+              Capacité : {{ scene.maxRows * scene.maxColumns }} places
+              ({{ scene.maxRows }} rangées x {{ scene.maxColumns }} colonnes)
+            </p>
+
+            <div class="card-footer">
+              <div class="admin-actions" *ngIf="isAdmin || isOrganiser">
+                <button [routerLink]="['/organiser/modify-scene', scene.id]" class="btn-edit" title="Modifier la salle">
+                  <i class="bi bi-pencil-square"></i> Modifier
+                </button>
+              </div>
+              <span class="scene-badge">Salle active</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+</div>

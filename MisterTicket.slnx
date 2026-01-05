@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="misterticket.client/misterticket.client.esproj">
+    <Build />
+    <Deploy />
+  </Project>
+  <Project Path="MisterTicket.Server/MisterTicket.Server.csproj" />
+</Solution>

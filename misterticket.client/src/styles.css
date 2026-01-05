@@ -1,0 +1,10 @@
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: #050b18;
+}
+app-root {
+  display: block;
+  min-height: 100vh;
+}
