@@ -27,13 +27,13 @@ const routes: Routes = [
     path: 'organiser/create-scene',
     component: CreateSceneComponent,
     canActivate: [RoleGuard],
-    data: { expectedRole: 'Organiser' }
+    data: { roles: ['Admin', 'Organiser'] }
   },
   {
     path: 'organiser/create-event',
     component: CreateEventComponent,
     canActivate: [RoleGuard],
-    data: { expectedRole: 'Organiser' }
+    data: { roles: ['Admin', 'Organiser'] }
   },
   {
     path: 'organiser/modify-event/:id',

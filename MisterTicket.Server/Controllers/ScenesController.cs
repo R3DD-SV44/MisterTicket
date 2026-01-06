@@ -59,6 +59,7 @@ public class ScenesController : ControllerBase
         return scene == null ? NotFound() : Ok(scene);
     }
 
+    [Authorize(Policy = "Management")]
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
