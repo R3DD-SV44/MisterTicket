@@ -4,18 +4,21 @@ using Microsoft.EntityFrameworkCore;
 using MisterTicket.Server.Data;
 using MisterTicket.Server.Models;
 using MisterTicket.Server.DTOs;
+using MisterTicket.Server.Services;
+
+namespace MisterTicket.Server.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 public class EventsController : ControllerBase
 {
-    private readonly IWebHostEnvironment _environment;
     private readonly ApplicationDbContext _context;
+    private readonly IFileService _fileService;
 
-    public EventsController(ApplicationDbContext context, IWebHostEnvironment environment)
+    public EventsController(ApplicationDbContext context, IFileService fileService)
     {
         _context = context;
-        _environment = environment;
+        _fileService = fileService;
     }
 
     [HttpGet("getAll")]
@@ -106,17 +109,7 @@ public class EventsController : ControllerBase
 
         if (dto.ImageFile != null)
         {
-            var folderPath = Path.Combine(_environment.WebRootPath, "uploads");
-            if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
-
-            var fileName = Guid.NewGuid().ToString() + Path.GetExtension(dto.ImageFile.FileName);
-            var filePath = Path.Combine(folderPath, fileName);
-
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await dto.ImageFile.CopyToAsync(stream);
-            }
-            @event.ImageUrl = "/uploads/" + fileName;
+            @event.ImageUrl = await _fileService.SaveImageAsync(dto.ImageFile);
         }
 
         _context.Events.Add(@event);
@@ -167,23 +160,9 @@ public class EventsController : ControllerBase
 
         if (dto.ImageFile != null)
         {
-            if (!string.IsNullOrEmpty(@event.ImageUrl))
-            {
-                var oldPath = Path.Combine(_environment.WebRootPath, @event.ImageUrl.TrimStart('/'));
-                if (System.IO.File.Exists(oldPath)) System.IO.File.Delete(oldPath);
-            }
+            _fileService.DeleteImage(@event.ImageUrl);
 
-            var folderPath = Path.Combine(_environment.WebRootPath, "uploads");
-            if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
-
-            var fileName = Guid.NewGuid().ToString() + Path.GetExtension(dto.ImageFile.FileName);
-            var filePath = Path.Combine(folderPath, fileName);
-
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await dto.ImageFile.CopyToAsync(stream);
-            }
-            @event.ImageUrl = "/uploads/" + fileName;
+            @event.ImageUrl = await _fileService.SaveImageAsync(dto.ImageFile);
         }
 
         await _context.SaveChangesAsync();
@@ -220,6 +199,8 @@ public class EventsController : ControllerBase
             .Where(es => es.EventId == id)
             .ToListAsync();
         _context.EventSeats.RemoveRange(eventSeats);
+
+        _fileService.DeleteImage(@event.ImageUrl);
 
         _context.Events.Remove(@event);
 

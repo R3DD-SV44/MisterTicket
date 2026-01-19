@@ -6,6 +6,7 @@ using MisterTicket.Server.Data;
 using MisterTicket.Server.Hubs;
 using MisterTicket.Server.Models;
 using MisterTicket.Server.DTOs;
+using MisterTicket.Server.Services;
 using System.Security.Claims;
 
 namespace MisterTicket.Server.Controllers;
@@ -17,11 +18,16 @@ public class ReservationsController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
     private readonly IHubContext<TicketHub> _hubContext;
+    private readonly IReservationService _reservationService;
 
-    public ReservationsController(ApplicationDbContext context, IHubContext<TicketHub> hubContext)
+    public ReservationsController(
+        ApplicationDbContext context,
+        IHubContext<TicketHub> hubContext,
+        IReservationService reservationService)
     {
         _context = context;
         _hubContext = hubContext;
+        _reservationService = reservationService;
     }
 
     [HttpGet("{id}")]
@@ -77,77 +83,23 @@ public class ReservationsController : ControllerBase
             return Unauthorized(new { message = "User is not authenticated." });
         }
 
-        using var transaction = await _context.Database.BeginTransactionAsync();
-        try
+        var result = await _reservationService.CreateReservationAsync(userId, request);
+
+        if (!result.Success)
         {
-            var eventExists = await _context.Events.AnyAsync(e => e.Id == request.EventId);
-            if (!eventExists)
-            {
-                return NotFound(new { message = $"Event with ID {request.EventId} not found." });
-            }
-
-            var eventSeats = await _context.EventSeats
-                .Where(es => es.EventId == request.EventId && request.SeatIds.Contains(es.SeatId))
-                .ToListAsync();
-
-            if (eventSeats.Count != request.SeatIds.Count)
-            {
-                return BadRequest(new { message = "Certains sièges sélectionnés ne sont pas valides pour cet événement." });
-            }
-
-            foreach (var es in eventSeats)
-            {
-                bool isLocked = es.Status == SeatStatus.Paid ||
-                               (es.Status == SeatStatus.ReservedTemp && es.LockedUntil > DateTime.UtcNow);
-
-                if (isLocked)
-                {
-                    return StatusCode(StatusCodes.Status409Conflict, new { message = $"Le siège {es.SeatId} est déjà réservé ou en cours d'achat." });
-                }
-            }
-
-            foreach (var es in eventSeats)
-            {
-                es.Status = SeatStatus.ReservedTemp;
-                es.LockedUntil = DateTime.UtcNow.AddMinutes(15);
-                es.ReservedByUserId = userId;
-
-                await _hubContext.Clients.All.SendAsync("ReceiveSeatStatusUpdate", es.EventId, es.SeatId, SeatStatus.ReservedTemp);
-            }
-
-            var seats = await _context.Seats
-                .Where(s => request.SeatIds.Contains(s.Id))
-                .ToListAsync();
-
-            var reservation = new Reservation
-            {
-                UserId = userId,
-                EventId = request.EventId,
-                SelectedSeats = seats,
-                Status = ReservationStatus.OnGoing,
-                ReservationDate = DateTime.UtcNow
-            };
-
-            _context.Reservations.Add(reservation);
-            await _context.SaveChangesAsync();
-
-            await transaction.CommitAsync();
-
-            request.Id = reservation.Id;
-            var total = seats.Sum(s => s.Price);
-
-            return CreatedAtAction("GetReservationById", new { id = reservation.Id }, new
-            {
-                reservationId = reservation.Id,
-                total = total,
-                details = request
-            });
+            return StatusCode(result.HttpStatusCode, new { message = result.Error });
         }
-        catch (Exception ex)
+
+        var reservation = result.Reservation;
+        var total = reservation.SelectedSeats.Sum(s => s.Price);
+        request.Id = reservation.Id;
+
+        return CreatedAtAction("GetReservationById", new { id = reservation.Id }, new
         {
-            await transaction.RollbackAsync();
-            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while creating the reservation." });
-        }
+            reservationId = reservation.Id,
+            total = total,
+            details = request
+        });
     }
 
     [HttpPost("{id}/pay")]

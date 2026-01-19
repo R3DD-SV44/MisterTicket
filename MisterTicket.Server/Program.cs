@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -15,6 +14,10 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
+
+builder.Services.AddTransient<IFileService, FileService>();      
+builder.Services.AddScoped<IAuthService, AuthService>();            
+builder.Services.AddScoped<IReservationService, ReservationService>(); 
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>

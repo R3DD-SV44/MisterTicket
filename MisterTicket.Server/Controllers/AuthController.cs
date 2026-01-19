@@ -2,42 +2,40 @@
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using MisterTicket.Server.Data;
 using MisterTicket.Server.DTOs;
 using MisterTicket.Server.Models;
-using System.IdentityModel.Tokens.Jwt;
+using MisterTicket.Server.Services;
 using System.Security.Claims;
-using System.Text;
+
+namespace MisterTicket.Server.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
+    private readonly IAuthService _authService;
     private readonly ApplicationDbContext _context;
-    private readonly IConfiguration _config;
 
-    public AuthController(ApplicationDbContext context, IConfiguration config)
+    public AuthController(IAuthService authService, ApplicationDbContext context)
     {
+        _authService = authService;
         _context = context;
-        _config = config;
     }
 
     [HttpPost("register")]
     [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Register(UserDto dto)
     {
-        var user = new User
-        {
-            Name = dto.Name,
-            Email = dto.Email,
-            Password = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-            Role = UserRole.Customer
-        };
+        var result = await _authService.RegisterAsync(dto);
 
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
-        return Created(string.Empty, new { message = "Utilisateur créé" });
+        if (!result.Success)
+        {
+            return BadRequest(new { message = result.Message });
+        }
+
+        return Created(string.Empty, new { message = result.Message });
     }
 
     [HttpPost("login")]
@@ -45,31 +43,14 @@ public class AuthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Login([FromBody] LoginRequest login)
     {
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == login.Email);
-        if (user == null) return Unauthorized();
+        var result = await _authService.LoginAsync(login.Email, login.Password);
 
-        if (user == null || !BCrypt.Net.BCrypt.Verify(login.Password, user.Password))
+        if (!result.Success)
         {
-            return Unauthorized(new { message = "Email ou mot de passe incorrect" });
+            return Unauthorized(new { message = result.Message });
         }
 
-        var claims = new[] {
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Name, user.Name),
-            new Claim(ClaimTypes.Email, user.Email),
-            new Claim(ClaimTypes.Role, user.Role.ToString())
-        };
-
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
-        var token = new JwtSecurityToken(
-            issuer: "MisterTicket",
-            audience: "MisterTicket",
-            claims: claims,
-            expires: DateTime.Now.AddHours(3),
-            signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256)
-        );
-
-        return Ok(new { token = new JwtSecurityTokenHandler().WriteToken(token) });
+        return Ok(new { token = result.Token });
     }
 
     [Authorize(Roles = "Admin")]
